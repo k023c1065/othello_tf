@@ -179,8 +179,14 @@ class train_module():
             print("EPOCH:",e)
             for images,labels in tqdm(train_ds):
                 loss=self.train_step(images,labels)
+        print("train loss:",loss,end="   ")
+        loss_array=[]
+        for images,labels in test_ds:
+            loss=self.test_step(images,labels)
+            loss_array.append(loss)
+        print("test loss:",np.mean(loss_array))
     def save_model(self,model_path="./model/"):
-        self.model.save(model_path+str(datetime.now())+".dat")
+        self.model.save_weights(model_path+str(datetime.now())+".h5")
             
 
                 
