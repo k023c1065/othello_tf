@@ -4,7 +4,10 @@ from dataset import *
 import pickle
 import time
 from tqdm import tqdm
-def main():
+import multiprocessing
+def main(proc_num=None):
+    if proc_num is None:
+        proc_num=
     dataset=[[],[]]
     for _ in tqdm(range(10000)):
         cond=game_cond()
