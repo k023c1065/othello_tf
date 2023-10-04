@@ -2,10 +2,9 @@ from network import *
 import pickle
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
-batch_size=32
 
 
-def main():
+def main(EPOCH=10,batch_size=32):
     print("loading...",end="")
     with open("dataset/data.dat","rb") as f:
         dataset=pickle.load(f)
@@ -23,7 +22,7 @@ def main():
     optimizer=tf.optimizers.Adam()
     loss_object=tf.keras.losses.categorical_crossentropy
     t_module=train_module(model,loss_object,optimizer)
-    t_module.start_train(train_ds,test_ds)
+    t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
     t_module.save_model()
     
     return t_module
