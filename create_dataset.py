@@ -5,11 +5,14 @@ import pickle
 import time
 from tqdm import tqdm
 import multiprocessing
-def main(proc_num=None):
+def main(proc_num=None,play_num=10000):
+    IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
+    if proc_num==1:
+        IS_MULTI=False
     dataset=[[],[]]
-    for _ in tqdm(range(10000)):
+    for _ in tqdm(range(play_num)):
         cond=game_cond()
         data=[[],[]]
         end_flg=0

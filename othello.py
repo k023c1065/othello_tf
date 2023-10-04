@@ -23,7 +23,7 @@ const_direction=[
 const_direction=deque(const_direction)
 const_direction.rotate(4)
 const_direction=list(const_direction)
-print(const_direction)
+
 class game_cond:
     def __init__(self):
         self.board=np.zeros((2,8,8),dtype=bool)
