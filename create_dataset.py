@@ -7,7 +7,7 @@ from tqdm import tqdm
 import multiprocessing
 def main(proc_num=None):
     if proc_num is None:
-        proc_num=
+        proc_num=multiprocessing.cpu_count()
     dataset=[[],[]]
     for _ in tqdm(range(10000)):
         cond=game_cond()
