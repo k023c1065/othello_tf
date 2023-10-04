@@ -25,7 +25,8 @@ def main():
     loss_object=tf.keras.losses.categorical_crossentropy
     t_module=train_module(model,loss_object,optimizer)
     t_module.start_train(train_ds,test_ds)
-    model=t_module.model
+    t_module.save_model()
+    
     
     
 if __name__=="__main__":

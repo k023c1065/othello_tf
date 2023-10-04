@@ -6,6 +6,7 @@ import cv2
 import glob
 import os
 from tqdm import tqdm
+from datetime import datetime
 def raw_load_model():
     folders=glob.glob("./mymodel/*")
     folder=folders[-1]
@@ -177,6 +178,8 @@ class train_module():
         for e in range(EPOCH):
             for images,labels in tqdm(train_ds):
                 loss=self.train_step(images,labels)
+    def save_model(self,model_path="./model/"):
+        self.model.save(model_path+str(datetime.now())+".dat")
             
 
                 
