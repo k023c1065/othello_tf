@@ -12,8 +12,8 @@ def main():
     print("Done")
     x,y=dataset[0],dataset[1]
     y=tf.image.per_image_standardization(y)
-    x_train,x_test=train_test_split(x,random_state=0)
-    y_train,y_test=train_test_split(np.array(y).reshape(y.shape[0],64),random_state=0)
+    x_train,x_test,y_train,y_test=train_test_split(x,np.array(y).reshape(y.shape[0],64),test_size=0.2,random_state=0)
+    #=train_test_split(,random_state=0)
     test_ds = tf.data.Dataset.from_tensor_slices(
                 (x_test,y_test)
             ).batch(64)
@@ -26,7 +26,7 @@ def main():
     t_module.start_train(train_ds,test_ds)
     t_module.save_model()
     
-    
+    return t_module
     
 if __name__=="__main__":
     main()   
