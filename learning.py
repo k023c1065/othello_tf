@@ -15,7 +15,7 @@ def main(EPOCH=10,batch_size=32):
     x=np.array(x,dtype="uint8")
     print("---Describe of Dataset---")
     print(pd.DataFrame(pd.Series(x.ravel()).describe()).transpose())
-    print(pd.DataFrame(pd.Series(y.ravel()).describe()).transpose())
+    print(pd.DataFrame(pd.Series(np.array(y,dtype="float32").reshape(y.shape[0],64).ravel()).describe()).transpose())
     print("-------Describe End------")
     x_train,x_test,y_train,y_test=train_test_split(x,np.array(y,dtype="float32").reshape(y.shape[0],64),test_size=0.2,random_state=0)
     #=train_test_split(,random_state=0)
