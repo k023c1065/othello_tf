@@ -11,7 +11,6 @@ def main():
         dataset=pickle.load(f)
     print("Done")
     x,y=dataset[0],dataset[1]
-    y=y.reshape(y.shape[0],64)
     y=tf.image.per_image_standardization(y)
     x_train,x_test=train_test_split(x,random_state=0)
     y_train,y_test=train_test_split(np.array(y).reshape(y.shape[0],64),random_state=0)

@@ -176,6 +176,7 @@ class train_module():
     
     def start_train(self,train_ds,test_ds,EPOCH=10):
         for e in range(EPOCH):
+            print("EPOCH:",e)
             for images,labels in tqdm(train_ds):
                 loss=self.train_step(images,labels)
     def save_model(self,model_path="./model/"):
