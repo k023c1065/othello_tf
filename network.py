@@ -25,7 +25,7 @@ class ConvModel(keras.Model):
         self.conv_3=[kl.Conv2D(32,3,activation="relu",padding="same") for i in range(4)]
         self.pooling_4=kl.AveragePooling2D()
         self.flatten=kl.GlobalAveragePooling2D()
-        self.dense_0=[kl.Dense(128,activation="relu"),kl.Dense(8,activation="softmax")]
+        self.dense_0=[kl.Dense(128,activation="relu"),kl.Dense(64,activation="softmax")]
     def call(self,inputs,training=False,debug=False):
         x=inputs
         for l in self.conv_0:
