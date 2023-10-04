@@ -10,8 +10,8 @@ def main(EPOCH=10,batch_size=32):
         dataset=pickle.load(f)
     print("Done")
     x,y=dataset[0],dataset[1]
-    y=y-y.mean()
-    y=tf.keras.layers.Rescaling(1.0/y.max())(y)
+    # y=y-y.mean()
+    # y=tf.keras.layers.Rescaling(1.0/y.max())(y)
     x=np.array(x,dtype="uint8")
     print("---Describe of Dataset---")
     print(pd.DataFrame(pd.Series(x.ravel()).describe()).transpose())
