@@ -22,7 +22,7 @@ def main(EPOCH=10,batch_size=32):
     optimizer=tf.optimizers.Adam()
     loss_object=tf.keras.losses.categorical_crossentropy
     t_module=train_module(model,loss_object,optimizer)
-    t_module.start_train(test_ds,train_ds,EPOCH=EPOCH)
+    t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
     t_module.save_model()
     
     return t_module
