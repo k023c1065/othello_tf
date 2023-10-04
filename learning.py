@@ -11,6 +11,7 @@ def main(EPOCH=10,batch_size=32):
     print("Done")
     x,y=dataset[0],dataset[1]
     y=tf.image.per_image_standardization(y)
+    x=np.array(x,dtype="uint8")
     x_train,x_test,y_train,y_test=train_test_split(x,np.array(y).reshape(y.shape[0],64),test_size=0.2,random_state=0)
     #=train_test_split(,random_state=0)
     test_ds = tf.data.Dataset.from_tensor_slices(
