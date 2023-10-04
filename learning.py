@@ -2,7 +2,7 @@ from network import *
 import pickle
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
-
+import pandas as pd
 
 def main(EPOCH=10,batch_size=32):
     print("loading...",end="")
@@ -13,6 +13,10 @@ def main(EPOCH=10,batch_size=32):
     y=y-y.mean()
     y=tf.keras.layers.Rescaling(1.0/y.max())(y)
     x=np.array(x,dtype="uint8")
+    print("---Describe of Dataset---")
+    print(pd.DataFrame(pd.Series(x.ravel()).describe()).transpose())
+    print(pd.DataFrame(pd.Series(y.ravel()).describe()).transpose())
+    print("-------Describe End------")
     x_train,x_test,y_train,y_test=train_test_split(x,np.array(y,dtype="float32").reshape(y.shape[0],64),test_size=0.2,random_state=0)
     #=train_test_split(,random_state=0)
     test_ds = tf.data.Dataset.from_tensor_slices(
