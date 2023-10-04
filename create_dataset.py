@@ -38,6 +38,6 @@ def main():
     print(dataset[0].shape,dataset[1].shape)
     with open("./dataset/data.dat","wb") as f:
         pickle.dump(dataset,f)
-    
+    return dataset
 if __name__=="__main__":
     main()
