@@ -179,7 +179,7 @@ class train_module():
             print("EPOCH:",e)
             for images,labels in tqdm(train_ds):
                 loss=self.train_step(images,labels)
-            print("train loss:",loss,end="   ")
+            print("train loss:",np.mean(loss),end="   ")
             loss_array=[]
             for images,labels in test_ds:
                 loss=self.test_step(images,labels)

@@ -10,6 +10,7 @@ def main(EPOCH=10,batch_size=32):
         dataset=pickle.load(f)
     print("Done")
     x,y=dataset[0],dataset[1]
+    y=y-y.mean()
     y=tf.keras.layers.Rescaling(1.0/y.max())(y)
     x=np.array(x,dtype="uint8")
     x_train,x_test,y_train,y_test=train_test_split(x,np.array(y,dtype="float32").reshape(y.shape[0],64),test_size=0.2,random_state=0)
