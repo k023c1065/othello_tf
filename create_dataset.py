@@ -5,7 +5,8 @@ import pickle
 import time
 from tqdm import tqdm
 import multiprocessing
-def main(proc_num=None,play_num=10000):
+import cv2
+def main(proc_num=None,play_num=10000,expand_rate=8):
     IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
@@ -37,7 +38,8 @@ def main(proc_num=None,play_num=10000):
         score=list(cond.get_score())
         for i,s in enumerate(score):
             for d in data[i]:
-                dataset[0].append(d[0])
+                board=cv2.resize(d[0],dsize=None,fx=expand_rate,fy=expand_rate)
+                dataset[0].append(board)
                 a=move2board(d[1],i)
                 dataset[1].append(a*score[i]/sum(score))
     dataset=[np.array(dataset[0],dtype=bool),np.array(dataset[1],dtype="float16")]
