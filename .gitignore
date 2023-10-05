@@ -4,5 +4,6 @@
 /__pycache__/
 /dataset/*
 /dataset/
-
+/model/*
 /test.ipynb
+/model

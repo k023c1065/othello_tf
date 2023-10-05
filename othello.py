@@ -231,10 +231,12 @@ def test_play(model,game_count=100):
                 
                 if cond.turn==0:
                     r=np.array(model(np.transpose((cond.board.repeat(8, axis=1).repeat(8, axis=2))[np.newaxis],[0,2,3,1]))[0]).reshape(8,8)
+                    print(r)
                     r=[r[p[0]][p[1]] for p in poss]
                 else:
                     r=[1 for p in poss]
                 next_move=random.choices(poss,weights=r)[0]
+                
                 cond.move(next_move[0],next_move[1])
             else:
                 end_flg+=1
