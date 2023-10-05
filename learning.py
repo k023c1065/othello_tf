@@ -26,7 +26,7 @@ def main(EPOCH=10,batch_size=32):
             (x_train, y_train)).shuffle(10000).batch(batch_size)
     model=ResNet((64,64,2),64)
     optimizer=tf.optimizers.Adam()
-    loss_object=tf.keras.losses.categorical_crossentropy
+    loss_object=tf.keras.losses.mean_squared_error
     t_module=train_module(model,loss_object,optimizer)
     t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
     t_module.save_model()
