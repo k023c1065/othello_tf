@@ -41,7 +41,9 @@ def main(proc_num=None,play_num=10000,expand_rate=8):
                 board=d[0].repeat(expand_rate, axis=1).repeat(expand_rate, axis=2)
                 dataset[0].append(np.array(board,dtype=bool))
                 a=move2board(d[1],i)
-                dataset[1].append(a*score[i]/sum(score))
+                a=a*score[i]/sum(score)
+                a+=max(0,(1-score[i]/sum(score)))
+                dataset[1].append(a)
     
     dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),np.array(dataset[1],dtype="float16")]
     print(dataset[0].shape,dataset[1].shape)
