@@ -214,7 +214,7 @@ if __name__=="__main__":
             cond.show()
             exit()
     
-    
+import random
 def test_play(model,game_count=100):
     win_count=[0,0]
     for _ in range(game_count):
