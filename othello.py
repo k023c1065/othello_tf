@@ -238,6 +238,8 @@ def test_play(model,game_count=100):
                 cond.move(next_move[0],next_move[1])
             else:
                 end_flg+=1
+            if game_count==1:
+                cond.show()
             cond.flip_board()
         score=list(cond.get_score())
         win_count[np.argmax(score)]+=1
