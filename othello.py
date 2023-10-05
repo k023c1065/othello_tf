@@ -216,9 +216,11 @@ if __name__=="__main__":
     
     
 def test_play(model,game_count=100):
+    win_count=[0,0]
     for _ in range(game_count):
         cond=game_cond()
         end_flg=0
+        
         while not(cond.isEnd() or end_flg>=2):
             poss=[]
             for p in cond.placable:
@@ -237,3 +239,6 @@ def test_play(model,game_count=100):
             else:
                 end_flg+=1
             cond.flip_board()
+        score=list(cond.get_score())
+        win_count[np.argmax(score)]+=1
+    return win_count
