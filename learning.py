@@ -25,7 +25,7 @@ def main(EPOCH=10,batch_size=32):
     train_ds = tf.data.Dataset.from_tensor_slices(
             (x_train, y_train)).shuffle(10000).batch(batch_size)
     model=ResNet((64,64,2),64)
-    optimizer=tf.optimizers.Adam()
+    optimizer=tf.optimizers.Adam(learning_rate=0.01)
     loss_object=tf.keras.losses.mean_squared_error
     t_module=train_module(model,loss_object,optimizer)
     t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
