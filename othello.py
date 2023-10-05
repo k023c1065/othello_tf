@@ -230,7 +230,7 @@ def test_play(model,game_count=100):
                 end_flg=0
                 
                 if cond.turn==0:
-                    r=model(np.transpose(cond.board[np.newaxis],[0,2,3,1]))[0]
+                    r=np.array(model(np.transpose(cond.board[np.newaxis],[0,2,3,1]))[0]).reshape(8,8)
                     r=[r[p[0]][p[1]] for p in poss]
                 else:
                     r=[1 for p in poss]
