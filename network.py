@@ -190,6 +190,7 @@ class train_module():
             for images,labels in test_ds:
                 loss=self.test_step(images,labels)
                 loss_array.append(loss)
+            print(np.array(loss_array))
             print("test loss:",np.mean(loss_array))
     def save_model(self,model_path="./model/"):
         self.model.save_weights(model_path+str(datetime.now())+".h5")
