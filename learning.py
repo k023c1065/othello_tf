@@ -24,7 +24,7 @@ def main(EPOCH=10,batch_size=32):
             ).batch(64)
     train_ds = tf.data.Dataset.from_tensor_slices(
             (x_train, y_train)).shuffle(10000).batch(batch_size)
-    model=ResNet((2,64,64),64)
+    model=ResNet((64,64,2),64)
     optimizer=tf.optimizers.Adam()
     loss_object=tf.keras.losses.categorical_crossentropy
     t_module=train_module(model,loss_object,optimizer)
