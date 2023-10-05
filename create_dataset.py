@@ -43,7 +43,7 @@ def main(proc_num=None,play_num=10000,expand_rate=8):
                 a=move2board(d[1],i)
                 a=a*score[i]/sum(score)
                 a+=max(0,(1-score[i]/sum(score)))
-                a[d[1][0]][d[1][1]]=a*score[i]/sum(score)
+                #a[d[1][0]][d[1][1]]=a*score[i]/sum(score)
                 dataset[1].append(a.reshape(1,64))
     
     dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),np.array(dataset[1],dtype="float16")]
