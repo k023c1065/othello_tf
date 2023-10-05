@@ -189,7 +189,7 @@ class train_module():
             loss_array=[]
             for images,labels in test_ds:
                 loss=self.test_step(images,labels)
-                loss_array.append(loss)
+                loss_array.append(np.mean(loss))
             print(np.array(loss_array).shape)
             print("test loss:",np.mean(np.array(loss_array)))
     def save_model(self,model_path="./model/"):
