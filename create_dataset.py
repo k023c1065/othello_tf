@@ -39,11 +39,11 @@ def main(proc_num=None,play_num=10000,expand_rate=8):
         for i,s in enumerate(score):
             for d in data[i]:
                 board=d[0].repeat(expand_rate, axis=1).repeat(expand_rate, axis=2)
-                board=np.transpose(board , [0,2,3,1])
                 dataset[0].append(np.array(board,dtype=bool))
                 a=move2board(d[1],i)
                 dataset[1].append(a*score[i]/sum(score))
-    dataset=[np.array(dataset[0],dtype=bool),np.array(dataset[1],dtype="float16")]
+    
+    dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),np.array(dataset[1],dtype="float16")]
     print(dataset[0].shape,dataset[1].shape)
     with open("./dataset/data.dat","wb") as f:
         pickle.dump(dataset,f)
