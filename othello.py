@@ -214,3 +214,26 @@ if __name__=="__main__":
             cond.show()
             exit()
     
+    
+def test_play(model,game_count=100):
+    for _ in range(game_count):
+        cond=game_cond()
+        end_flg=0
+        while not(cond.isEnd() or end_flg>=2):
+            poss=[]
+            for p in cond.placable:
+                if cond.is_movable(p[0],p[1]):
+                    poss.append(p)
+            if len(poss)>0:
+                end_flg=0
+                
+                if game_cond.turn==0:
+                    r=model(np.transpose(cond.board[np.newaxis],[0,2,3,1]))[0]
+                    r=[r[p[0]][p[1]] for p in poss]
+                else:
+                    r=[1 for p in poss]
+                next_move=random.choices(poss,weights=r)[0]
+                cond.move(next_move[0],next_move[1])
+            else:
+                end_flg+=1
+            cond.flip_board()
