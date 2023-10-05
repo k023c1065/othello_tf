@@ -38,7 +38,8 @@ def main(proc_num=None,play_num=10000,expand_rate=8):
         score=list(cond.get_score())
         for i,s in enumerate(score):
             for d in data[i]:
-                board=cv2.resize(np.array(d[0],dtype="uint8"),dsize=None,fx=expand_rate,fy=expand_rate)
+                board=d[0].repeat(expand_rate, axis=1).repeat(expand_rate, axis=2)
+                board=np.transpose(board , [0,2,3,1])
                 dataset[0].append(np.array(board,dtype=bool))
                 a=move2board(d[1],i)
                 dataset[1].append(a*score[i]/sum(score))
