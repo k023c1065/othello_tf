@@ -124,7 +124,7 @@ class ResNet(tf.keras.Model):
                 Res_Block(128, 128) for _ in range(3)
             ],
             kl.GlobalAveragePooling2D(),
-            kl.Dense(128, activation="relu"),
+            kl.Dense(256, activation="relu"),
             kl.Dense(output_dim, activation="softmax")
         ]
     def call(self, x, training=True,isDebug=False):
