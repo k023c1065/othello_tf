@@ -133,16 +133,16 @@ class ResNet(tf.keras.Model):
                 for _layer in layer:
                     x = _layer(x,training)
                     if isDebug:
-                        print(x.shape,np.max(x),np.min(x))
+                        print(_layer.name,x.shape,np.max(x),np.min(x))
             else:
                 if type(layer)==kl.BatchNormalization:
                     x = layer(x,training)
                     if isDebug:
-                        print(x.shape,np.max(x),np.min(x))
+                        print(layer.name,x.shape,np.max(x),np.min(x))
                 else:
                     x = layer(x)
                     if isDebug:
-                        print(x.shape,np.max(x),np.min(x))
+                        print(layer.name,x.shape,np.max(x),np.min(x))
         return x
 
 def fix_data(data,isDataset=False):
