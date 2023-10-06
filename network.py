@@ -115,11 +115,11 @@ class ResNet(tf.keras.Model):
             [
                 Res_Block(64, 64) for _ in range(3)
             ],
-            kl.Conv2D(64, kernel_size=1, strides=2, use_bias=False),
+            kl.Conv2D(64, kernel_size=1, strides=2),
             [
                 Res_Block(64, 64) for _ in range(3)
             ],
-            kl.Conv2D(128, kernel_size=1, strides=2, use_bias=False),
+            kl.Conv2D(128, kernel_size=1, strides=2),
             [
                 Res_Block(128, 128) for _ in range(4)
             ],
