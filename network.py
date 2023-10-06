@@ -13,7 +13,7 @@ def raw_load_model():
     model=keras.models.load_model(folder)
     return model
 class ConvModel(keras.Model):
-    def __init__(self):
+    def __init__(self,inp_ch,out_ch):
         self.file_path="./model/mymodel"
         super(ConvModel, self).__init__()
         self.conv_0=[kl.Conv2D(4,3,activation="relu",padding="same") for i in range(2)]
@@ -25,7 +25,7 @@ class ConvModel(keras.Model):
         self.conv_3=[kl.Conv2D(32,3,activation="relu",padding="same") for i in range(4)]
         self.pooling_4=kl.AveragePooling2D()
         self.flatten=kl.GlobalAveragePooling2D()
-        self.dense_0=[kl.Dense(128,activation="relu"),kl.Dense(64,activation="softmax")]
+        self.dense_0=[kl.Dense(128,activation="relu"),kl.Dense(out_ch,activation="softmax")]
     def call(self,inputs,training=False,debug=False):
         x=inputs
         for l in self.conv_0:
