@@ -109,11 +109,11 @@ class ResNet(tf.keras.Model):
             kl.MaxPool2D(pool_size=3, strides=2, padding="same"),
             Res_Block(16, 32),
             [
-                Res_Block(32, 32) for _ in range(1)
+                Res_Block(32, 32) for _ in range(2)
             ],
             kl.Conv2D(64, kernel_size=1, strides=2),
             [
-                Res_Block(64, 64) for _ in range(2)
+                Res_Block(64, 64) for _ in range(3)
             ],
             kl.Conv2D(64, kernel_size=1, strides=2, use_bias=False),
             [
@@ -121,7 +121,7 @@ class ResNet(tf.keras.Model):
             ],
             kl.Conv2D(128, kernel_size=1, strides=2, use_bias=False),
             [
-                Res_Block(128, 128) for _ in range(3)
+                Res_Block(128, 128) for _ in range(4)
             ],
             kl.GlobalAveragePooling2D(),
             kl.Dense(256, activation="relu"),
