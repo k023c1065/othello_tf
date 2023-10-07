@@ -3,8 +3,11 @@ import pickle
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 import pandas as pd
-
+model=None
+optimizer=None
+loss_object=None
 def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
+    global model,optimizer,loss_object
     print("loading...",end="")
     with open("dataset/data.dat","rb") as f:
         dataset=pickle.load(f)
@@ -31,11 +34,46 @@ def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
     model.summary()
     optimizer=tf.optimizers.Adam()
     loss_object=tf.keras.losses.categorical_crossentropy
-    t_module=train_module(model,loss_object,optimizer)
-    t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
-    t_module.save_model()
+    # t_module=train_module(model,loss_object,optimizer)
+    # t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
+    # t_module.save_model()
+    for e in range(EPOCH):
+        print("EPOCH:",e)
+        for images,labels in tqdm(train_ds):
+            loss=train_step(images,labels,loss_object)
+        print("train loss:",np.mean(loss),end="     ")
+        loss_array=[]
+        for images,labels in test_ds:
+            loss=test_step(model,images,labels)
+            loss_array.append(np.mean(loss))
+        print("test loss:",np.mean(np.array(loss_array)))
     
-    return t_module
+    return model
     
 if __name__=="__main__":
     main()   
+    
+    
+@tf.function
+def train_step(images, labels,loss_object):
+    with tf.GradientTape() as tape:
+        # training=True is only needed if there are layers with different
+        # behavior during training versus inference (e.g. Dropout).
+        predictions = model(images, training=True)
+        loss = loss_object(labels, predictions)
+    gradients = tape.gradient(loss, model.trainable_variables)
+    try:
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    except KeyboardInterrupt:
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+        raise KeyboardInterrupt()
+    return loss
+
+
+@tf.function
+def test_step(model,images, labels):
+    # training=False is only needed if there are layers with different
+    # behavior during training versus inference (e.g. Dropout).
+    predictions = model(images, training=False)
+    t_loss = loss_object(labels, predictions)
+    return t_loss
