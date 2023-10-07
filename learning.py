@@ -45,7 +45,7 @@ def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
         for images,labels in tqdm(train_ds):
             if flg:
                 flg=False
-                print(images.shape,labels.shape)
+                print(images.dtype,labels.dtype)
             loss=train_step(images,labels,loss_object)
         print("train loss:",np.mean(loss),end="     ")
         loss_array=[]
