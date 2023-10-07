@@ -29,8 +29,8 @@ def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
             ).batch(128)
     train_ds = tf.data.Dataset.from_tensor_slices(
             (x_train, y_train)).shuffle(10000).batch(batch_size)
-    #model=ResNet(input_shape,64)
-    model=ConvModel(input_shape,64)
+    model=ResNet(input_shape,64)
+    #model=ConvModel(input_shape,64)
     print(np.zeros(input_shape)[np.newaxis].shape)
     model.build(np.zeros(input_shape)[np.newaxis].shape)
     model.summary()
