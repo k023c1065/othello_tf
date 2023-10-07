@@ -127,8 +127,8 @@ class ResNet(tf.keras.Model):
             kl.Dense(256, activation="relu"),
             kl.Dense(output_dim, activation="relu",bias_initializer=keras.initializers.Constant(value=0.5))
         ]
-    def call(self, x, training=True):
-        isDebug=False
+    def call(self, x, training=True,isDebug=False):
+        
         for layer in self._kl:
             if isinstance(layer, list):
                 for _layer in layer:
@@ -141,7 +141,7 @@ class ResNet(tf.keras.Model):
                     if isDebug:
                         print(layer.name,x.shape,np.max(x),np.min(x))
                 else:
-                    x = layer(x,training)
+                    x = layer(x)
                     if isDebug:
                         print(layer.name,x.shape,np.max(x),np.min(x))
         return x
