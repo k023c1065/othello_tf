@@ -41,11 +41,19 @@ def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
     # t_module.save_model()
     for e in range(EPOCH):
         print("EPOCH:",e)
+        flg=True
         for images,labels in tqdm(train_ds):
+            if flg:
+                flg=False
+                print(images.shape,labels.shape)
             loss=train_step(images,labels,loss_object)
         print("train loss:",np.mean(loss),end="     ")
         loss_array=[]
+        flg=True
         for images,labels in test_ds:
+            if flg:
+                flg=False
+                print(images.shape,labels.shape)
             loss=test_step(model,images,labels)
             loss_array.append(np.mean(loss))
         print("test loss:",np.mean(np.array(loss_array)))
