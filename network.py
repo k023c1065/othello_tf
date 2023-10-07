@@ -105,47 +105,39 @@ class ResNet(tf.keras.Model):
         self._kl = [
             kl.BatchNormalization(),
             kl.Activation(tf.nn.relu),
-            kl.Conv2D(64, kernel_size=7, strides=2, padding="same", use_bias=False, input_shape=input_shape),
+            kl.Conv2D(16, kernel_size=7, strides=2, padding="same", use_bias=False, input_shape=input_shape),
             kl.MaxPool2D(pool_size=3, strides=2, padding="same"),
-            Res_Block(64, 64),
+            Res_Block(16, 32),
+            [
+                Res_Block(32, 32) for _ in range(1)
+            ],
+            kl.Conv2D(64, kernel_size=1, strides=2),
             [
                 Res_Block(64, 64) for _ in range(2)
             ],
-            kl.Conv2D(128, kernel_size=1, strides=2),
+            kl.Conv2D(64, kernel_size=1, strides=2, use_bias=False),
             [
-                Res_Block(128, 128) for _ in range(2)
+                Res_Block(64, 64) for _ in range(3)
             ],
-            kl.Conv2D(256, kernel_size=1, strides=2),
+            kl.Conv2D(128, kernel_size=1, strides=2, use_bias=False),
             [
-                Res_Block(256, 256) for _ in range(2)
-            ],
-            kl.Conv2D(512, kernel_size=1, strides=2),
-            [
-                Res_Block(512, 512) for _ in range(3)
+                Res_Block(128, 128) for _ in range(3)
             ],
             kl.GlobalAveragePooling2D(),
             kl.Dense(256, activation="relu"),
-            kl.Dense(output_dim, activation="relu",bias_initializer=keras.initializers.Constant(value=0.5))
+            kl.Dense(output_dim, activation="softmax")
         ]
-    def call(self, x, training=True,isDebug=False):
-        
+    def call(self, x, training=True):
         for layer in self._kl:
             if isinstance(layer, list):
                 for _layer in layer:
                     x = _layer(x,training)
-                    if isDebug:
-                        print(_layer.name,x.shape,np.max(x),np.min(x))
             else:
                 if type(layer)==kl.BatchNormalization:
                     x = layer(x,training)
-                    if isDebug:
-                        print(layer.name,x.shape,np.max(x),np.min(x))
                 else:
                     x = layer(x)
-                    if isDebug:
-                        print(layer.name,x.shape,np.max(x),np.min(x))
         return x
-
 def fix_data(data,isDataset=False):
     data=cv2.resize(data,dsize=(224,224),interpolation=cv2.INTER_LINEAR)
     data=cv2.cvtColor(data,cv2.COLOR_BGRA2GRAY)
