@@ -34,7 +34,7 @@ def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
     print(np.zeros(input_shape)[np.newaxis].shape)
     model.build(np.zeros(input_shape)[np.newaxis].shape)
     model.summary()
-    optimizer=tf.optimizers.Adam()
+    optimizer=tf.keras.optimizers.Adam()
     loss_object=tf.keras.losses.categorical_crossentropy
     # t_module=train_module(model,loss_object,optimizer)
     # t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
