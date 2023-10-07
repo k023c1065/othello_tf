@@ -15,7 +15,7 @@ def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
     x,y=dataset[0],dataset[1]
     # y=y-y.mean()
     # y=tf.keras.layers.Rescaling(1.0/y.max())(y)
-    x=np.array(x,dtype="float32")
+    x=np.array(x,dtype="float32")*0.9
     print("---Describe of Dataset---")
     print(pd.DataFrame(pd.Series(x[:min(len(x),30000)].ravel()).describe()).transpose())
     print(pd.DataFrame(pd.Series(np.array(y[:min(len(y),30000)],dtype="float32").reshape(min(y.shape[0],30000),64).ravel()).describe()).transpose())
