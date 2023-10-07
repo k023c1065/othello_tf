@@ -105,23 +105,23 @@ class ResNet(tf.keras.Model):
         self._kl = [
             kl.BatchNormalization(),
             kl.Activation(tf.nn.relu),
-            kl.Conv2D(16, kernel_size=7, strides=2, padding="same", use_bias=False, input_shape=input_shape),
+            kl.Conv2D(64, kernel_size=7, strides=2, padding="same", use_bias=False, input_shape=input_shape),
             kl.MaxPool2D(pool_size=3, strides=2, padding="same"),
-            Res_Block(16, 32),
+            Res_Block(64, 64),
             [
-                Res_Block(32, 32) for _ in range(2)
-            ],
-            kl.Conv2D(64, kernel_size=1, strides=2),
-            [
-                Res_Block(64, 64) for _ in range(3)
-            ],
-            kl.Conv2D(64, kernel_size=1, strides=2),
-            [
-                Res_Block(64, 64) for _ in range(3)
+                Res_Block(64, 64) for _ in range(2)
             ],
             kl.Conv2D(128, kernel_size=1, strides=2),
             [
-                Res_Block(128, 128) for _ in range(4)
+                Res_Block(128, 128) for _ in range(2)
+            ],
+            kl.Conv2D(256, kernel_size=1, strides=2),
+            [
+                Res_Block(256, 256) for _ in range(2)
+            ],
+            kl.Conv2D(512, kernel_size=1, strides=2),
+            [
+                Res_Block(512, 512) for _ in range(3)
             ],
             kl.GlobalAveragePooling2D(),
             kl.Dense(256, activation="relu"),
@@ -140,7 +140,7 @@ class ResNet(tf.keras.Model):
                     if isDebug:
                         print(layer.name,x.shape,np.max(x),np.min(x))
                 else:
-                    x = layer(x)
+                    x = layer(x,training)
                     if isDebug:
                         print(layer.name,x.shape,np.max(x),np.min(x))
         return x

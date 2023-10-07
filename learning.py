@@ -4,7 +4,7 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 import pandas as pd
 
-def main(EPOCH=10,batch_size=16):
+def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
     print("loading...",end="")
     with open("dataset/data.dat","rb") as f:
         dataset=pickle.load(f)
@@ -24,7 +24,7 @@ def main(EPOCH=10,batch_size=16):
             ).batch(64)
     train_ds = tf.data.Dataset.from_tensor_slices(
             (x_train, y_train)).shuffle(10000).batch(batch_size)
-    model=ResNet((64,64,2),64)
+    model=ResNet(input_shape,64)
     #model=ConvModel((64,64,2),64)
     model(np.zeros((1,64,64,2)))
     model.summary()
