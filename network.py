@@ -103,7 +103,7 @@ class ResNet(tf.keras.Model):
     def __init__(self, input_shape, output_dim):
         super().__init__()
         self._kl = [
-            kl.BatchNormalization(),
+            #kl.BatchNormalization(),
             kl.Activation(tf.nn.relu),
             kl.Conv2D(16, kernel_size=7, strides=2, padding="same", use_bias=False, input_shape=input_shape),
             kl.MaxPool2D(pool_size=3, strides=2, padding="same"),
