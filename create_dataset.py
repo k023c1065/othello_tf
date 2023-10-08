@@ -6,6 +6,7 @@ import time
 from tqdm import tqdm
 import multiprocessing
 import cv2
+import tensorflow as tf
 def main(proc_num=None,play_num=10000,expand_rate=8):
     IS_MULTI=True
     if proc_num is None:
@@ -45,8 +46,11 @@ def main(proc_num=None,play_num=10000,expand_rate=8):
                 a+=max(0,(1-score[i]/sum(score)))
                 a[d[1][0]][d[1][1]]=score[i]/sum(score)
                 dataset[1].append(a.reshape(64))
-    
-    dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),np.array(dataset[1],dtype="float16")]
+    dataset[1]=np.array(dataset[1],dtype="float32")
+    dataset[1]=tf.image.per_image_standardization(dataset[1])
+    dataset[1]=dataset[1]-dataset[1].min()
+    dataset[1]=dataset[1]/dataset[1].max()
+    dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),dataset[1]]
     print(dataset[0].shape,dataset[1].shape)
     with open("./dataset/data.dat","wb") as f:
         pickle.dump(dataset,f)
