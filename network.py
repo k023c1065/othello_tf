@@ -127,16 +127,22 @@ class ResNet(tf.keras.Model):
             kl.Dense(256, activation="relu"),
             kl.Dense(output_dim, activation="softmax")
         ]
-    def call(self, x, training=True):
+    def call(self, x, training=True,isDebug=True):
         for layer in self._kl:
             if isinstance(layer, list):
                 for _layer in layer:
                     x = _layer(x,training)
+                    if isDebug:
+                        print(x.shape,x.min().x.max(),x.mean(),x.std())
             else:
                 if type(layer)==kl.BatchNormalization:
                     x = layer(x,training)
+                    if isDebug:
+                        print(x.shape,x.min().x.max(),x.mean(),x.std())
                 else:
                     x = layer(x)
+                    if isDebug:
+                        print(x.shape,x.min().x.max(),x.mean(),x.std())
         return x
 def fix_data(data,isDataset=False):
     data=cv2.resize(data,dsize=(224,224),interpolation=cv2.INTER_LINEAR)
