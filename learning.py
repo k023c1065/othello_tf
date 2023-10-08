@@ -36,7 +36,7 @@ def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
     model.build(np.zeros(input_shape)[np.newaxis].shape)
     model.summary()
     optimizer=tf.keras.optimizers.Adam()
-    loss_object=tf.nn.softmax_cross_entropy_with_logits_v2
+    loss_object=tf.keras.losses.categorical_crossentropy
     # t_module=train_module(model,loss_object,optimizer)
     # t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
     # t_module.save_model()
