@@ -16,11 +16,12 @@ def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
     # y=y-y.mean()
     # y=tf.keras.layers.Rescaling(1.0/y.max())(y)
     x=np.array(x,dtype="float32")
+    y=np.array(y,dtype="float32").reshape(y.shape[0],64)
     print("---Describe of Dataset---")
     print(pd.DataFrame(pd.Series(x[:min(len(x),30000)].ravel()).describe()).transpose())
     print(pd.DataFrame(pd.Series(np.array(y[:min(len(y),30000)],dtype="float32").reshape(min(y.shape[0],30000),64).ravel()).describe()).transpose())
     print("-------Describe End------")
-    x_train,x_test,y_train,y_test=train_test_split(x,np.array(y,dtype="float32").reshape(y.shape[0],64),test_size=0.25,random_state=0)
+    x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.25,random_state=0)
     #=train_test_split(,random_state=0)
     print(x_train.shape)
     print(y_train.shape)
@@ -57,8 +58,8 @@ def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
             loss=test_step(model,images,labels)
             loss_array.append(np.mean(loss))
         print("test loss:",np.mean(np.array(loss_array)))
-    
-    return model
+    del optimizer,loss_object
+    return list(model,[x,y])
     
 if __name__=="__main__":
     main()   
