@@ -59,7 +59,7 @@ def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
             loss_array.append(np.mean(loss))
         print("test loss:",np.mean(np.array(loss_array)))
     del optimizer,loss_object
-    return list(model,[x,y])
+    return [model,[x,y]]
     
 if __name__=="__main__":
     main()   
