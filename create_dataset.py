@@ -45,6 +45,7 @@ def main(proc_num=None,play_num=10000,expand_rate=8):
                 a=a*score[i]/sum(score)
                 a+=max(0,(1-score[i]/sum(score)))
                 a[d[1][0]][d[1][1]]=score[i]/sum(score)
+                a/=a.sum()
                 dataset[1].append(a.reshape(64))
     dataset[1]=np.array(dataset[1],dtype="float32")
     dataset[1]=(dataset[1]-dataset[1].mean())/dataset[1].std()
