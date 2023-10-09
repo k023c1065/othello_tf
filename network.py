@@ -218,7 +218,7 @@ class train_module():
                 for images,labels in t:
                     loss=self.train_step(images,labels)
                     loss_array.append(np.mean(np.array(loss)))
-                    t.set_description(f"loss:{np.round(np.mean(loss_array),5)}")
+                    t.set_description(f"loss:{np.round(np.mean(loss_array),decimals=5)}")
                     t.update()
             print("train loss:",np.mean(loss),end="     ")
             loss_array=[]

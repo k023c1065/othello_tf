@@ -23,18 +23,23 @@ const_direction=[
 const_direction=deque(const_direction)
 const_direction.rotate(4)
 const_direction=list(const_direction)
-
+from copy import copy,deepcopy
 class game_cond:
-    def __init__(self):
-        self.board=np.zeros((2,8,8),dtype=bool)
+    def __init__(self,cond=None):
         
-        self.board[0][3][3]=True
-        self.board[0][4][4]=True
-        self.board[1][3][4]=True
-        self.board[1][4][3]=True
-        
-        self.placable={(2,2),(5,5),(2,5),(5,2),(2,3),(3,2),(4,5),(5,4),(3,5),(2,4),(5,3),(4,2)}
-        self.turn=0
+        if cond is None:
+            self.board=np.zeros((2,8,8),dtype=bool)
+            self.board[0][3][3]=True
+            self.board[0][4][4]=True
+            self.board[1][3][4]=True
+            self.board[1][4][3]=True
+            
+            self.placable={(2,2),(5,5),(2,5),(5,2),(2,3),(3,2),(4,5),(5,4),(3,5),(2,4),(5,3),(4,2)}
+            self.turn=0
+        else:
+            self.board=deepcopy(cond.board)
+            self.placable=deepcopy(cond.placable)
+            self.turn=copy(cond.turn)
     def is_movable(self,i,j):
         if not (i,j) in self.placable:
             return False
@@ -215,6 +220,54 @@ if __name__=="__main__":
             exit()
     
 import random
+
+
+class MCTS():
+    def __init__(self,cond:game_cond,model):
+        self.init_cond=cond
+        self.model=model
+        self.uct_c=2**0.5
+        self.rollout_limit=10**2
+        self.play_count=[]
+    def roll_out(self,boards):
+        return np.array(self.model(boards)).reshape(len(boards),8,8)
+    
+    def get_tree(self):
+        poss=[]
+        for p in self.init_cond.placable:
+            if self.init_cond.is_movable(p[0],p[1]):
+                poss.append(p)
+        r=self.model(self.init_cond.board[np.newaxis])[0]
+        qc_score=[]
+        for p in poss:
+            self.play_count.append(1)
+            q=r[p[0]][p[1]]
+            c=self.uct_c*np.sqrt(np.log(len(poss))/1)
+            qc_score.append([q+c,self.get_key([p])])
+        qc_score.sort()
+        qc_score.reverse()
+        n_moves=self.get_moves(qc_score[0][1])
+        cond=game_cond(self.init_cond)
+        for move in n_moves:
+            cond.move(move[0],move[1])
+        
+            
+    def get_key(self,moves:list):
+        key=0
+        for i,move in enumerate(moves):
+            key+=self.sub_key(move)*(64**i)
+        return key
+    def sub_key(self,move):
+        return move[0]+8*move[1]
+    def get_moves(self,key):
+        moves=[]
+        while key>0:
+            moves.append(key%8)
+            key//=8
+        
+        
+    
+        
 def test_play(model,game_count=100):
     win_count=[0,0]
     for _ in range(game_count):
