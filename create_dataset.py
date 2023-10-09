@@ -56,7 +56,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock):
             if len(poss)>0:
                 end_flg=0
                 next_move=random.choice(poss)
-                data[cond.turn].append([cond.board,next_move])
+                data[cond.turn].append([cond.board,next_move,poss])
                 cond.move(next_move[0],next_move[1])
             else:
                 end_flg+=1
@@ -68,8 +68,11 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock):
                 dataset[0].append(np.array(board,dtype=bool))
                 a=move2board(d[1],i)
                 a=a*score[i]/sum(score)
-                a+=max(0,(1-score[i]/sum(score)))
-                a[d[1][0]][d[1][1]]=score[i]/sum(score)
+                for p in d[2]:
+                    if p==d[1]:
+                        a[d[1][0]][d[1][1]]=score[i]/sum(score)
+                    else:
+                        a[p[0]][p[1]]=1-score[i]/sum(score)
                 dataset[1].append(a.reshape(64))
     dataset[1]=np.array(tf.nn.softmax(dataset[1],axis=1))
 
