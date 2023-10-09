@@ -161,7 +161,7 @@ class miniResNet(tf.keras.Model):
         ]
     def call(self, x, training=True,isDebug=False):
         try:
-            assert(self.init_input_shape==x.shape)
+            assert(self.init_input_shape[1:]==x.shape)
         except AssertionError:
             raise AssertionError(f"Seems like input shape differs from init one.\n",
                                    f"init shape:{self.init_input_shape}",
