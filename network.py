@@ -148,6 +148,7 @@ class ResNet(tf.keras.Model):
 
 class miniResNet(tf.keras.Model):
     def __init__(self, input_shape, output_dim):
+        self.input_shape=input_shape
         super().__init__()
         self._kl = [
             kl.BatchNormalization(),
@@ -159,6 +160,7 @@ class miniResNet(tf.keras.Model):
             kl.Dense(output_dim,activation="softmax")
         ]
     def call(self, x, training=True,isDebug=False):
+        assert(self.input_shape==x.shape)
         for layer in self._kl:
             if isinstance(layer, list):
                 for _layer in layer:
