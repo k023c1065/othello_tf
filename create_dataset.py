@@ -72,10 +72,11 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock):
                         a[d[1][0]][d[1][1]]=score[i]/sum(score)
                     else:
                         a[p[0]][p[1]]=1-score[i]/sum(score)
+                a/=a.reshape(64).sum()
                 dataset[1].append(a.reshape(64))
-    print("softmax")
-    dataset[1]=sfmax(dataset[1])
-    print("Done")
+    # print("softmax")
+    # dataset[1]=sfmax(dataset[1])
+    # print("Done")
     return dataset
 
 def sfmax(x):
