@@ -29,7 +29,7 @@ def main(EPOCH=10,batch_size=16,input_shape=(8,8,2),t_module=None):
                 (x_test,y_test)
             ).batch(128)
     train_ds = tf.data.Dataset.from_tensor_slices(
-            (x_train, y_train)).shuffle(10000).batch(batch_size)
+            (x_train, y_train)).shuffle(10000,reshuffle_each_iteration=True).batch(batch_size)
     model=miniResNet(input_shape,64)
     #model=ConvModel(input_shape,64)
     print(np.zeros(input_shape)[np.newaxis].shape)
@@ -39,7 +39,11 @@ def main(EPOCH=10,batch_size=16,input_shape=(8,8,2),t_module=None):
         optimizer=tf.keras.optimizers.Adam()
         loss_object=tf.keras.losses.categorical_crossentropy
         t_module=train_module(model,loss_object,optimizer)
-    t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
+    try:
+        t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
+    except KeyboardInterrupt:
+        #t_module.save_model()
+        return t_module
     t_module.save_model()
     return t_module
     # for e in range(EPOCH):
