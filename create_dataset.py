@@ -66,8 +66,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock):
             for d in data[i]:
                 board=d[0].repeat(expand_rate, axis=1).repeat(expand_rate, axis=2)
                 dataset[0].append(np.array(board,dtype=bool))
-                a=move2board(d[1],i)
-                a=a*score[i]/sum(score)
+                a=np.zeros((8,8))
                 for p in d[2]:
                     if p==d[1]:
                         a[d[1][0]][d[1][1]]=score[i]/sum(score)
