@@ -160,7 +160,12 @@ class miniResNet(tf.keras.Model):
             kl.Dense(output_dim,activation="softmax")
         ]
     def call(self, x, training=True,isDebug=False):
-        assert(self.init_input_shape==x.shape)
+        try:
+            assert(self.init_input_shape==x.shape)
+        except AssertionError:
+            raise AssertionError(f"Seems like input shape differs from init one.\n",
+                                   f"init shape:{self.init_input_shape}",
+                                   f"input shape:{x.shape}")
         for layer in self._kl:
             if isinstance(layer, list):
                 for _layer in layer:
