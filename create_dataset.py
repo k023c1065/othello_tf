@@ -74,8 +74,13 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock):
                     else:
                         a[p[0]][p[1]]=1-score[i]/sum(score)
                 dataset[1].append(a.reshape(64))
-    dataset[1]=np.array(tf.nn.softmax(dataset[1],axis=1))
-
+    print("softmax")
+    dataset[1]=sfmax(dataset[1])
+    print("Done")
     return dataset
+
+def sfmax(x):
+    return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
+
 if __name__=="__main__":
     main(proc_num=4,play_num=200,)
