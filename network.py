@@ -217,7 +217,7 @@ class train_module():
             with tqdm(train_ds) as t:
                 for images,labels in t:
                     loss=self.train_step(images,labels)
-                    loss_array.append(loss)
+                    loss_array.append(float(loss))
                     t.set_description(f"loss:{np.round(np.mean(loss_array),5)}")
                     t.update()
             print("train loss:",np.mean(loss),end="     ")
