@@ -25,7 +25,7 @@ def main(proc_num=None,play_num=10000,expand_rate=1):
                 dataset[1]=r[1]
             else:
                 dataset[0]=dataset[0]+r[0]
-                dataset[1]=dataset[1]+r[1]
+                dataset[1]=np.concatenate([dataset[1], r[1]])
     else:
         dataset=sub_create_dataset(play_num,expand_rate,None,None)
     dataset[1]=np.array(dataset[1],dtype="float32")
