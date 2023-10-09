@@ -14,7 +14,14 @@ def main(proc_num=None,play_num=10000,expand_rate=1):
     if proc_num==1:
         IS_MULTI=False
     dataset=[[],[]]
-    
+    if IS_MULTI:
+        multiprocessing.freeze_support()
+        Lock=multiprocessing.Manager().Lock()
+        with multiprocessing.Pool(proc_num) as p:
+            pool_result=p.starmap(sub_create_dataset,[(play_num//proc_num,expand_rate,p_num,Lock) for p_num in range(proc_num)])
+        for r in pool_result:
+            dataset[0]=dataset[0]+r[0]
+            dataset[1]=dataset[1]+r[1]
     dataset[1]=np.array(dataset[1],dtype="float32")
     # dataset[1]=(dataset[1]-dataset[1].mean())/dataset[1].std()
     # dataset[1]=dataset[1]-dataset[1].min()
@@ -24,7 +31,7 @@ def main(proc_num=None,play_num=10000,expand_rate=1):
     with open("./dataset/data.dat","wb") as f:
         pickle.dump(dataset,f)
     return dataset
-def sub_create_dataset(play_num,expand_rate):
+def sub_create_dataset(play_num,expand_rate,p_num,Lock):
     dataset=[[],[]]
     for _ in tqdm(range(play_num)):
         cond=game_cond()
@@ -59,5 +66,6 @@ def sub_create_dataset(play_num,expand_rate):
                 a[d[1][0]][d[1][1]]=score[i]/sum(score)
                 a/=a.reshape(64).sum()
                 dataset[1].append(a.reshape(64))
+    return dataset
 if __name__=="__main__":
-    main()
+    main(proc_num=4,play_num=200,)
