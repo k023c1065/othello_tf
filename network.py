@@ -213,8 +213,13 @@ class train_module():
     def start_train(self,train_ds,test_ds,EPOCH=10):
         for e in range(EPOCH):
             print("EPOCH:",e)
-            for images,labels in tqdm(train_ds):
-                loss=self.train_step(images,labels)
+            loss_array=[]
+            with tqdm(train_ds) as t:
+                for images,labels in t:
+                    loss=self.train_step(images,labels)
+                    loss_array.append(loss)
+                    t.set_description(f"loss:{np.round(np.mean(loss_array),5)}")
+                    t.update()
             print("train loss:",np.mean(loss),end="     ")
             loss_array=[]
             for images,labels in test_ds:
