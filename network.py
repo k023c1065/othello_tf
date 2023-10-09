@@ -144,13 +144,37 @@ class ResNet(tf.keras.Model):
                     if isDebug:
                         print(layer.name,x.shape,np.min(np.array(x)),np.max(np.array(x)),np.mean(np.array(x)),np.std(np.array(x)))
         return x
-def fix_data(data,isDataset=False):
-    data=cv2.resize(data,dsize=(224,224),interpolation=cv2.INTER_LINEAR)
-    data=cv2.cvtColor(data,cv2.COLOR_BGRA2GRAY)
-    data=np.array(data,dtype="float32")
-    data/=255
-    return data
 
+
+class miniResNet(tf.keras.Model):
+    def __init__(self, input_shape, output_dim):
+        super().__init__()
+        self._kl = [
+            kl.BatchNormalization(),
+            kl.Activation(tf.nn.relu),
+            kl.Conv2D(256,kernel_size=3,strides=(1,1),padding="same",activation="relu"),
+            [Res_Block(256,256) for _ in range(19)],
+            kl.GlobalAveragePooling2D(),
+            kl.Dense(512,activation="relu"),
+            kl.Dense(output_dim,activation="softmax")
+        ]
+    def call(self, x, training=True,isDebug=False):
+        for layer in self._kl:
+            if isinstance(layer, list):
+                for _layer in layer:
+                    x = _layer(x,training)
+                    if isDebug:
+                        print(_layer.name,x.shape,np.min(np.array(x)),np.max(np.array(x)),np.mean(np.array(x)),np.std(np.array(x)))
+            else:
+                if type(layer)==kl.BatchNormalization:
+                    x = layer(x,training)
+                    if isDebug:
+                        print(layer.name,x.shape,np.min(np.array(x)),np.max(np.array(x)),np.mean(np.array(x)),np.std(np.array(x)))
+                else:
+                    x = layer(x)
+                    if isDebug:
+                        print(layer.name,x.shape,np.min(np.array(x)),np.max(np.array(x)),np.mean(np.array(x)),np.std(np.array(x)))
+        return x
 class train_module():
     def __init__(self,model,loss_object,optimizer):
         self.model=model

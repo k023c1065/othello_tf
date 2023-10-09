@@ -6,7 +6,7 @@ import pandas as pd
 model=None
 optimizer=None
 loss_object=None
-def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
+def main(EPOCH=10,batch_size=16,input_shape=(8,8,2),t_module=None):
     global model,optimizer,loss_object
     print("loading...",end="")
     with open("dataset/data.dat","rb") as f:
@@ -30,35 +30,37 @@ def main(EPOCH=10,batch_size=16,input_shape=(224,224,2)):
             ).batch(128)
     train_ds = tf.data.Dataset.from_tensor_slices(
             (x_train, y_train)).shuffle(10000).batch(batch_size)
-    model=ResNet(input_shape,64)
+    model=miniResNet(input_shape,64)
     #model=ConvModel(input_shape,64)
     print(np.zeros(input_shape)[np.newaxis].shape)
     model.build(np.zeros(input_shape)[np.newaxis].shape)
     model.summary()
-    optimizer=tf.keras.optimizers.Adam()
-    loss_object=tf.keras.losses.categorical_crossentropy
-    # t_module=train_module(model,loss_object,optimizer)
-    # t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
-    # t_module.save_model()
-    for e in range(EPOCH):
-        print("EPOCH:",e)
-        flg=True
-        for images,labels in tqdm(train_ds):
-            if flg:
-                flg=False
-                #print(images.dtype,labels.dtype)
-            loss=train_step(images,labels,loss_object)
-        print("train loss:",np.mean(loss),end="     ")
-        loss_array=[]
-        flg=True
-        for images,labels in test_ds:
-            if flg:
-                flg=False
-                #print(images.shape,labels.shape)
-            loss=test_step(model,images,labels)
-            loss_array.append(np.mean(loss))
-        print("test loss:",np.mean(np.array(loss_array)))
-    del optimizer,loss_object
+    if t_module is None:
+        optimizer=tf.keras.optimizers.Adam()
+        loss_object=tf.keras.losses.categorical_crossentropy
+        t_module=train_module(model,loss_object,optimizer)
+    t_module.start_train(train_ds,test_ds,EPOCH=EPOCH)
+    t_module.save_model()
+    return t_module
+    # for e in range(EPOCH):
+    #     print("EPOCH:",e)
+    #     flg=True
+    #     for images,labels in tqdm(train_ds):
+    #         if flg:
+    #             flg=False
+    #             #print(images.dtype,labels.dtype)
+    #         loss=train_step(images,labels,loss_object)
+    #     print("train loss:",np.mean(loss),end="     ")
+    #     loss_array=[]
+    #     flg=True
+    #     for images,labels in test_ds:
+    #         if flg:
+    #             flg=False
+    #             #print(images.shape,labels.shape)
+    #         loss=test_step(model,images,labels)
+    #         loss_array.append(np.mean(loss))
+    #     print("test loss:",np.mean(np.array(loss_array)))
+    # del optimizer,loss_object
     return [model,[x,y]]
     
 if __name__=="__main__":

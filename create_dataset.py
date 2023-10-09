@@ -7,7 +7,7 @@ from tqdm import tqdm
 import multiprocessing
 import cv2
 import tensorflow as tf
-def main(proc_num=None,play_num=10000,expand_rate=8):
+def main(proc_num=None,play_num=10000,expand_rate=1):
     IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
