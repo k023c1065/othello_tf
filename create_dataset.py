@@ -14,6 +14,18 @@ def main(proc_num=None,play_num=10000,expand_rate=1):
     if proc_num==1:
         IS_MULTI=False
     dataset=[[],[]]
+    
+    dataset[1]=np.array(dataset[1],dtype="float32")
+    # dataset[1]=(dataset[1]-dataset[1].mean())/dataset[1].std()
+    # dataset[1]=dataset[1]-dataset[1].min()
+    # dataset[1]=dataset[1]/dataset[1].max()
+    dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),dataset[1]]
+    print(dataset[0].shape,dataset[1].shape)
+    with open("./dataset/data.dat","wb") as f:
+        pickle.dump(dataset,f)
+    return dataset
+def sub_create_dataset(play_num,expand_rate):
+    dataset=[[],[]]
     for _ in tqdm(range(play_num)):
         cond=game_cond()
         data=[[],[]]
@@ -47,14 +59,5 @@ def main(proc_num=None,play_num=10000,expand_rate=1):
                 a[d[1][0]][d[1][1]]=score[i]/sum(score)
                 a/=a.reshape(64).sum()
                 dataset[1].append(a.reshape(64))
-    dataset[1]=np.array(dataset[1],dtype="float32")
-    # dataset[1]=(dataset[1]-dataset[1].mean())/dataset[1].std()
-    # dataset[1]=dataset[1]-dataset[1].min()
-    # dataset[1]=dataset[1]/dataset[1].max()
-    dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),dataset[1]]
-    print(dataset[0].shape,dataset[1].shape)
-    with open("./dataset/data.dat","wb") as f:
-        pickle.dump(dataset,f)
-    return dataset
 if __name__=="__main__":
     main()
