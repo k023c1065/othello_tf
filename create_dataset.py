@@ -22,6 +22,8 @@ def main(proc_num=None,play_num=10000,expand_rate=1):
         for r in pool_result:
             dataset[0]=dataset[0]+r[0]
             dataset[1]=dataset[1]+r[1]
+    else:
+        dataset=sub_create_dataset(play_num,expand_rate,None,None)
     dataset[1]=np.array(dataset[1],dtype="float32")
     # dataset[1]=(dataset[1]-dataset[1].mean())/dataset[1].std()
     # dataset[1]=dataset[1]-dataset[1].min()
@@ -64,8 +66,8 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock):
                 a=a*score[i]/sum(score)
                 a+=max(0,(1-score[i]/sum(score)))
                 a[d[1][0]][d[1][1]]=score[i]/sum(score)
-                a/=a.reshape(64).sum()
                 dataset[1].append(a.reshape(64))
+        dataset[1]=tf.nn.softmax(dataset[1],axis=1)
     return dataset
 if __name__=="__main__":
     main(proc_num=4,play_num=200,)
