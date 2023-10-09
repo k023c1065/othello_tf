@@ -20,8 +20,12 @@ def main(proc_num=None,play_num=10000,expand_rate=1):
         with multiprocessing.Pool(proc_num) as p:
             pool_result=p.starmap(sub_create_dataset,[(play_num//proc_num,expand_rate,p_num,Lock) for p_num in range(proc_num)])
         for r in pool_result:
-            dataset[0]=dataset[0]+r[0]
-            dataset[1]=dataset[1]+r[1]
+            if len(dataset[0])<1:
+                dataset[0]=r[0]
+                dataset[1]=r[1]
+            else:
+                dataset[0]=dataset[0]+r[0]
+                dataset[1]=dataset[1]+r[1]
     else:
         dataset=sub_create_dataset(play_num,expand_rate,None,None)
     dataset[1]=np.array(dataset[1],dtype="float32")
