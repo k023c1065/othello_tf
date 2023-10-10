@@ -219,7 +219,7 @@ if __name__=="__main__":
             cond.show()
             exit()
     
-import random
+import random,time
 
 
 class MCTS():
