@@ -267,7 +267,7 @@ class MCTS():
                 #print("child:",k)
                 self.play_count[k]=1
             # Evaluate Q score for current leaf
-            r=np.array(self.model(np.transpose(cond.board[np.newaxis],[0,2,3,1]))[0]).reshape(8,8)
+            r=np.array(self.model(np.transpose(cond.board[np.newaxis],[0,2,3,1]),training=False)[0]).reshape(8,8)
             for p in poss:
                 q=r[p[0]][p[1]]
                 self.qdict[key*64+self.sub_key(p)]=q
@@ -305,13 +305,13 @@ class MCTS():
                 qc[0]=0
         r=[None,0]
         poss=[]
-        print("MCTS")
+        #print("MCTS")
         #self.init_cond.show()
         #print(self.init_cond.placable,self.init_cond.turn)
         poss=self.move_poss_dict[0]
                     
         #print(poss)
-        print("MCTS END")
+        #print("MCTS END")
         for p in poss:
             key=self.sub_key(p)
             if r[1]<self.play_count[key]:
@@ -347,34 +347,43 @@ class MCTS():
         
 def test_play(model,game_count=100):
     win_count=[0,0]
+    if game_count==1:
+        isDebug=True
+    
     for _ in range(game_count):
-        cond=game_cond()
-        end_flg=0
-        
-        while not(cond.isEnd() or end_flg>=2):
-            poss=[]
-            for p in cond.placable:
-                if cond.is_movable(p[0],p[1]):
-                    poss.append(p)
-            if len(poss)>0:
-                end_flg=0
-                
-                if cond.turn==0:
-                    print("Executing model")
-                    mcts=MCTS(cond,model)
-                    next_move=mcts.get_move()[0]
+        try:
+            cond=game_cond()
+            end_flg=0
+            print()
+            while not(cond.isEnd() or end_flg>=2):
+                print("\rGame count:",_+1,"space left:",64-(cond.board[0]+cond.board[1]).sum(),end="        ")
+                poss=[]
+                for p in cond.placable:
+                    if cond.is_movable(p[0],p[1]):
+                        poss.append(p)
+                if len(poss)>0:
+                    end_flg=0
+                    
+                    if cond.turn==0:
+                        
+                        if isDebug:print("Executing model")
+                        mcts=MCTS(cond,model)
+                        next_move=mcts.get_move()[0]
+                    else:
+                        if isDebug:print("Executing random")
+                        r=[1 for p in poss]
+                        next_move=random.choices(poss,weights=r)[0]
+                    if isDebug:print("move:",next_move)
+                    
+                    cond.move(next_move[0],next_move[1])
                 else:
-                    print("Executing random")
-                    r=[1 for p in poss]
-                    next_move=random.choices(poss,weights=r)[0]
-                print("move:",next_move)
-                
-                cond.move(next_move[0],next_move[1])
-            else:
-                end_flg+=1
-            if game_count==1:
-                cond.show()
-            cond.flip_board()
+                    end_flg+=1
+                if game_count==1:
+                    cond.show()
+                cond.flip_board()
+        except KeyboardInterrupt:
+            cond.show()
+            raise KeyboardInterrupt()
         score=list(cond.get_score())
         win_count[np.argmax(score)]+=1
     return win_count
