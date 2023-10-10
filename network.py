@@ -8,7 +8,7 @@ import os
 from tqdm import tqdm
 from datetime import datetime
 def raw_load_model():
-    folders=glob.glob("./mymodel/*")
+    folders=glob.glob("./model/*")
     folder=folders[-1]
     model=keras.models.load_model(folder)
     return model
@@ -183,8 +183,12 @@ class miniResNet(tf.keras.Model):
                         print(layer.name,x.shape,np.min(np.array(x)),np.max(np.array(x)),np.mean(np.array(x)),np.std(np.array(x)))
         return x
 class train_module():
-    def __init__(self,model,loss_object,optimizer):
-        self.model=model
+    def __init__(self,model,loss_object,optimizer,input_shape=(8,8,2)):
+        if isinstance(model,str):
+            self.model=ResNet(input_shape)
+            self.model.load_weights(model)
+        else:
+            self.model=model       
         self.loss_object=loss_object
         self.optimizer=optimizer
     @tf.function
