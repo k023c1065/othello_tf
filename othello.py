@@ -227,7 +227,9 @@ class MCTS():
         self.init_cond=game_cond(cond)
         self.model=model
         self.uct_c=2**0.5
-        self.rollout_limit=50
+        self.qc_limit=50
+        self.roll_out_limit=100
+        self.time_limit=8
         self.play_count={}
         self.qdict={}
         self.move_poss_dict={}
@@ -240,7 +242,10 @@ class MCTS():
         # Defines parent leaf
         key=0
         n_moves=[]
-        while len(qc_score)<self.rollout_limit:
+        counter=0
+        s_t=time.time()
+        while len(qc_score)<self.qc_limit and counter<self.roll_out_limit and time.time()-s_t<self.time_limit:
+            counter+=1
             #print("-----------------------------")
             #print("qc_len:",len(qc_score))
             # Moves to parent leaf
