@@ -222,7 +222,7 @@ class train_module():
                 for images,labels in t:
                     loss=self.train_step(images,labels)
                     loss_array.append(np.mean(np.array(loss)))
-                    t.set_description(f"loss:{np.round(np.mean(loss_array),decimals=5)}")
+                    t.set_description(f"loss:{np.round(float(np.mean(loss_array)),decimals=5)}")
                     t.update()
             print("train loss:",np.mean(loss),end="     ")
             loss_array=[]
@@ -230,6 +230,7 @@ class train_module():
                 loss=self.test_step(images,labels)
                 loss_array.append(np.mean(loss))
             print("test loss:",np.mean(np.array(loss_array)))
+            self.save_model()
     def save_model(self,model_path="./model/"):
         self.model.save_weights(model_path+str(datetime.now())+".h5")
             
