@@ -349,7 +349,8 @@ def test_play(model,game_count=100):
     win_count=[0,0]
     if game_count==1:
         isDebug=True
-    
+    else:
+        isDebug=False
     for _ in range(game_count):
         try:
             cond=game_cond()
