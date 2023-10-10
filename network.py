@@ -242,7 +242,7 @@ class train_module():
     def save_model(self,model_path="./model/"):
         self.model.save_weights(model_path+str(datetime.now())+".h5")
         if ENV_COLAB:
-            self.model.save_weights("/content/MyDrive/model/"+str(datetime.now())+".h5")
+            self.model.save_weights("./drive/MyDrive/model/"+str(datetime.now())+".h5")
             
 
                 
