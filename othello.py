@@ -348,6 +348,9 @@ class MCTS():
             moves.reverse()
         return moves
         
+class ab_search():
+    def __init__(self,cond):
+        self.init_cond=game_cond(cond)
     
         
 def test_play(model,game_count=100):

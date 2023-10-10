@@ -7,6 +7,14 @@ import glob
 import os
 from tqdm import tqdm
 from datetime import datetime
+import sys
+moduleList = sys.modules
+ENV_COLAB = False
+if 'google.colab' in moduleList:
+    print("google_colab")
+    ENV_COLAB = True
+else:
+    print("Not google_colab")
 def raw_load_model():
     folders=glob.glob("./model/*")
     folder=folders[-1]
@@ -233,6 +241,8 @@ class train_module():
             self.save_model()
     def save_model(self,model_path="./model/"):
         self.model.save_weights(model_path+str(datetime.now())+".h5")
+        if ENV_COLAB:
+            self.model.save_weights("/content/MyDrive/model/"+str(datetime.now())+".h5")
             
 
                 
