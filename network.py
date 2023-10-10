@@ -199,6 +199,7 @@ class train_module():
             self.model=model       
         self.loss_object=loss_object
         self.optimizer=optimizer
+        self.last_train=None
     @tf.function
     def train_step(self,images, labels):
         with tf.GradientTape() as tape:
@@ -223,7 +224,9 @@ class train_module():
         return t_loss
     
     def start_train(self,train_ds,test_ds,EPOCH=10):
+        print("last train:",self.last_train)
         for e in range(EPOCH):
+            self.last_train=datetime.now()
             print("EPOCH:",e)
             loss_array=[]
             with tqdm(train_ds) as t:
