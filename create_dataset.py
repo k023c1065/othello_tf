@@ -7,12 +7,14 @@ from tqdm import tqdm
 import multiprocessing
 import cv2
 import tensorflow as tf
-def main(proc_num=None,play_num=10000,expand_rate=1):
+def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024):
     IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
     if proc_num==1:
         IS_MULTI=False
+    if play_num is None:
+        play_num=sub_play_count*proc_num
     dataset=[[],[]]
     if IS_MULTI:
         multiprocessing.freeze_support()
@@ -29,9 +31,6 @@ def main(proc_num=None,play_num=10000,expand_rate=1):
     else:
         dataset=sub_create_dataset(play_num,expand_rate,None,None)
     dataset[1]=np.array(dataset[1],dtype="float32")
-    # dataset[1]=(dataset[1]-dataset[1].mean())/dataset[1].std()
-    # dataset[1]=dataset[1]-dataset[1].min()
-    # dataset[1]=dataset[1]/dataset[1].max()
     dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),dataset[1]]
     print(dataset[0].shape,dataset[1].shape)
     with open("./dataset/data.dat","wb") as f:
@@ -83,4 +82,4 @@ def sfmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
 
 if __name__=="__main__":
-    main(proc_num=4,play_num=200,)
+    main(play_num=200,)
