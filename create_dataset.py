@@ -51,6 +51,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
         isModel=False
     else:
         isModel=True
+        mcts=MCTS(game_cond(),model)
     for _ in tqdm(range(play_num)):
         model_usage=[0,0]
         if isModel:
@@ -73,8 +74,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
                 if model_usage[cond.turn]==0:
                     next_move=random.choice(poss)
                 else:
-                    mcts=MCTS(cond,model)
-                    next_move=mcts.get_move()[0]
+                    next_move=mcts.get_move(cond)[0]
                 data[cond.turn].append([cond.board,next_move,poss])
                 cond.move(next_move[0],next_move[1])
             else:
