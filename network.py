@@ -18,9 +18,15 @@ else:
 def raw_load_model():
     model=miniResNet((8,8,2),64)
     model(np.empty((1,8,8,2)))
-    model_files=glob.glob("./model/*")
-    model_file=max(model_files,key=os.path.getctime)    
-    model.load_weights(model_file)
+    try:
+        model_files=glob.glob("./model/*")
+        model_file=max(model_files,key=os.path.getctime)    
+        model.load_weights(model_file)
+    except FileNotFoundError:
+       raise FileNotFoundError("Model filed failed to get\n",
+                               f"Expected File:{model_file}"
+                               f"targeted Files:{model_files}")
+        
     return model
 class ConvModel(keras.Model):
     def __init__(self,inp_ch,out_ch):

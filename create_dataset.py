@@ -17,7 +17,8 @@ def main(proc_num=None,play_num=10000,expand_rate=1,isModel=False):
     dataset=[[],[]]
     if isModel:
         model=network.raw_load_model()
-        if not tf.test.is_gpu_available():
+        if IS_MULTI and not tf.test.is_gpu_available():
+            print("Multi processing feature will be ignored")
             IS_MULTI=False #Neural network will use full cpu cores and multiprocessing will be bad in this situation
     else:
         model=None
@@ -59,7 +60,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
         end_flg=0
         s_t=time.time()
         while not(cond.isEnd() or end_flg>=2):
-            if time.time()-s_t>4:
+            if time.time()-s_t>10:
                 cond.show()
                 print(cond.isEnd(),end_flg<2)
                 time.sleep(10)
