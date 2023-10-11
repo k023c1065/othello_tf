@@ -2,6 +2,7 @@ import tensorflow as tf
 import keras
 from keras import layers as kl
 import numpy as np
+import matplotlib.pyplot as plt
 import cv2
 import glob
 import os
@@ -200,6 +201,10 @@ class train_module():
         self.loss_object=loss_object
         self.optimizer=optimizer
         self.last_train=None
+        self.train_count=0
+        self.train_loss=[[],[]]
+        self.test_loss=[[],[]]
+        self.plt_file_name="loss_graph.png"
     @tf.function
     def train_step(self,images, labels):
         with tf.GradientTape() as tape:
@@ -232,6 +237,8 @@ class train_module():
             with tqdm(train_ds) as t:
                 for images,labels in t:
                     loss=self.train_step(images,labels)
+                    self.train_count+=1
+                    self.train_loss.append(loss_array)
                     loss_array.append(np.mean(np.array(loss)))
                     t.set_description(f"loss:{np.round(float(np.mean(loss_array)),decimals=5)}")
                     t.update()
@@ -241,11 +248,22 @@ class train_module():
                 loss=self.test_step(images,labels)
                 loss_array.append(np.mean(loss))
             print("test loss:",np.mean(np.array(loss_array)))
+            self.test_loss[1].append(np.mean(np.array(loss_array)))
+            self.test_loss[0].append(self.train_count)
+            self.save_fig()
             self.save_model()
+    def save_fig(self):
+        plt.plot([i for i in range(len(self.train_loss))],self.train_loss,labels="train")
+        plt.plot(self.test_loss[0],self.test_loss[1],labels="test")
+        plt.grid()
+        plt.legend()
+        plt.savefig(self.plt_file_name)
     def save_model(self,model_path="./model/"):
-        self.model.save_weights(model_path+str(datetime.now())+".h5")
+        model_file_name=str(datetime.now())+".h5"
+        self.model.save_weights(model_path+model_file_name)
         if ENV_COLAB:
-            self.model.save_weights("./drive/MyDrive/model/"+str(datetime.now())+".h5")
+            self.model.save_weights("./drive/MyDrive/model/"+model_file_name)
+        print("model saved as ",model_file_name)
             
 
                 
