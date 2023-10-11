@@ -12,14 +12,22 @@ import sys
 moduleList = sys.modules
 ENV_COLAB = False
 if 'google.colab' in moduleList:
-    print("google_colab")
+    print("Is google_colab")
     ENV_COLAB = True
 else:
     print("Not google_colab")
 def raw_load_model():
-    folders=glob.glob("./model/*")
-    folder=folders[-1]
-    model=keras.models.load_model(folder)
+    model=miniResNet((8,8,2),64)
+    model(np.empty((1,8,8,2)))
+    try:
+        model_files=glob.glob("./model/*")
+        model_file=max(model_files,key=os.path.getctime)    
+        model.load_weights(model_file)
+    except FileNotFoundError:
+       raise FileNotFoundError("Model filed failed to get\n",
+                               f"Expected File:{model_file}"
+                               f"targeted Files:{model_files}")
+        
     return model
 class ConvModel(keras.Model):
     def __init__(self,inp_ch,out_ch):

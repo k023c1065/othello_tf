@@ -1,13 +1,16 @@
 from othello import *
 import random
 from dataset import *
+import network
 import pickle
 import time
 from tqdm import tqdm
 import multiprocessing
 import cv2
 import tensorflow as tf
-def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024):
+
+def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False):
+
     IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
@@ -16,11 +19,18 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024):
     if play_num is None:
         play_num=sub_play_count*proc_num
     dataset=[[],[]]
+    if isModel:
+        model=network.raw_load_model()
+        if IS_MULTI and not tf.test.is_gpu_available():
+            print("Multi processing feature will be ignored")
+            IS_MULTI=False #Neural network will use full cpu cores and multiprocessing will be bad in this situation
+    else:
+        model=None
     if IS_MULTI:
         multiprocessing.freeze_support()
         Lock=multiprocessing.Manager().Lock()
         with multiprocessing.Pool(proc_num) as p:
-            pool_result=p.starmap(sub_create_dataset,[(play_num//proc_num,expand_rate,p_num,Lock) for p_num in range(proc_num)])
+            pool_result=p.starmap(sub_create_dataset,[(play_num//proc_num,expand_rate,p_num,Lock,model) for p_num in range(proc_num)])
         for r in pool_result:
             if len(dataset[0])<1:
                 dataset[0]=r[0]
@@ -29,22 +39,30 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024):
                 dataset[0]=dataset[0]+r[0]
                 dataset[1]=np.concatenate([dataset[1], r[1]])
     else:
-        dataset=sub_create_dataset(play_num,expand_rate,None,None)
+        dataset=sub_create_dataset(play_num,expand_rate,None,None,model)
     dataset[1]=np.array(dataset[1],dtype="float32")
     dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),dataset[1]]
     print(dataset[0].shape,dataset[1].shape)
     with open("./dataset/data.dat","wb") as f:
         pickle.dump(dataset,f)
     return dataset
-def sub_create_dataset(play_num,expand_rate,p_num,Lock):
+def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
     dataset=[[],[]]
+    if model is None:
+        isModel=False
+    else:
+        isModel=True
+        mcts=MCTS(game_cond(),model)
     for _ in tqdm(range(play_num)):
+        model_usage=[0,0]
+        if isModel:
+            model_usage=[(_%4)//2,(_%4)%2]
         cond=game_cond()
         data=[[],[]]
         end_flg=0
         s_t=time.time()
         while not(cond.isEnd() or end_flg>=2):
-            if time.time()-s_t>4:
+            if time.time()-s_t>10 and not isModel:
                 cond.show()
                 print(cond.isEnd(),end_flg<2)
                 time.sleep(10)
@@ -54,7 +72,10 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock):
                     poss.append(p)
             if len(poss)>0:
                 end_flg=0
-                next_move=random.choice(poss)
+                if model_usage[cond.turn]==0:
+                    next_move=random.choice(poss)
+                else:
+                    next_move=mcts.get_next_move(cond)[0]
                 data[cond.turn].append([cond.board,next_move,poss])
                 cond.move(next_move[0],next_move[1])
             else:
@@ -82,4 +103,5 @@ def sfmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
 
 if __name__=="__main__":
-    main(play_num=200,)
+
+    main(proc_num=4,play_num=64,isModel=True)

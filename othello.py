@@ -24,6 +24,7 @@ const_direction=deque(const_direction)
 const_direction.rotate(4)
 const_direction=list(const_direction)
 from copy import copy,deepcopy
+base_2=[2**i for i in range(128)]
 class game_cond:
     def __init__(self,cond=None):
         
@@ -40,6 +41,11 @@ class game_cond:
             self.board=deepcopy(cond.board)
             self.placable=deepcopy(cond.placable)
             self.turn=copy(cond.turn)
+    def hash(self):
+        flatten_board=self.board.flatten()
+        hash=flatten_board*base_2
+        hash=np.base_repr(hash.sum(),36)+str(self.turn)
+        return hash
     def is_movable(self,i,j):
         if not (i,j) in self.placable:
             return False
@@ -223,22 +229,23 @@ import random,time
 
 
 class MCTS():
-    def __init__(self,cond:game_cond,model):
-        self.init_cond=game_cond(cond)
+    def __init__(self,cond:game_cond,model,search_rate=1):
         self.model=model
         self.uct_c=2**0.5
         self.qc_limit=50
         self.roll_out_limit=100
-        self.time_limit=8
+        self.time_limit=6
+        self.q_board_dict={}
+        self.search_rate=1
+    def change_search_rate(self,rate):
+        self.search_rate=rate
+    def get_next_move(self,cond):
+        qc_score=[]
         self.play_count={}
         self.qdict={}
         self.move_poss_dict={}
-    def roll_out(self,boards):
-        return np.array(self.model(boards)).reshape(len(boards),8,8)
-    
-    def get_move(self):
-        qc_score=[]
-        
+        self.init_cond=game_cond(cond)
+        grand_parent_key=self.init_cond.hash() #Am I going to use this?
         # Defines parent leaf
         key=0
         n_moves=[]
@@ -246,15 +253,12 @@ class MCTS():
         s_t=time.time()
         while len(qc_score)<self.qc_limit and counter<self.roll_out_limit and time.time()-s_t<self.time_limit:
             counter+=1
-            #print("-----------------------------")
-            #print("qc_len:",len(qc_score))
             # Moves to parent leaf
-            #print("key:",key)
             cond=game_cond(self.init_cond)
             for move in n_moves:
                 cond.move(move[0],move[1])
                 cond.flip_board()
-            #cond.show()
+
             # Expand
             poss=[]
             for p in cond.placable:
@@ -263,27 +267,29 @@ class MCTS():
             self.move_poss_dict[key]=poss
             target_key=key
             while target_key>0:
-                #print("parent:",target_key)
                 self.play_count[target_key]+=len(poss)
                 target_key//=64
-            #print("key*64:",key*64,type(key))
             for p in poss:
                 k=key*64+self.sub_key(p)
-                #print("child:",k)
                 self.play_count[k]=1
+            
             # Evaluate Q score for current leaf
-            r=np.array(self.model(np.transpose(cond.board[np.newaxis],[0,2,3,1]),training=False)[0]).reshape(8,8)
+            if cond.hash() in self.q_board_dict:
+                r=self.q_board_dict[cond.hash()]
+            else:
+                r=np.array(self.model(np.transpose(cond.board[np.newaxis],[0,2,3,1]),training=False)[0]).reshape(8,8)
+                self.q_board_dict[cond.hash()]=r
             for p in poss:
                 q=r[p[0]][p[1]]
                 self.qdict[key*64+self.sub_key(p)]=q
                 qc_score.append([q,key*64+self.sub_key(p)])
+                
             # Evaluate Q score for other leafs
             for qc in qc_score:
                 if qc[0]==0:
                     qc[0]=self.qdict[qc[1]]
             
             # Evaluate C score
-            #print("key")
             for qc in qc_score:
                 N=self.play_count[qc[1]]
                 N_sum=0
@@ -317,12 +323,12 @@ class MCTS():
                     
         #print(poss)
         #print("MCTS END")
+        poss_qc=[]
         for p in poss:
             key=self.sub_key(p)
-            if r[1]<self.play_count[key]:
-                r[1]=self.play_count[key]
-                r[0]=[key%8,key//8]
-        return r
+            poss_qc.append(self.play_count[key]**(1/self.search_rate))
+        r=random.choices(poss,weights=poss_qc,k=1)[0]
+        return [r,0]
         
             
     def get_key(self,moves:list):
@@ -352,9 +358,11 @@ class ab_search():
     def __init__(self,cond):
         self.init_cond=game_cond(cond)
     
+    
         
 def test_play(model,game_count=100):
     win_count=[0,0]
+    mcts=MCTS(game_cond(),model)
     if game_count==1:
         isDebug=True
     else:
@@ -372,12 +380,9 @@ def test_play(model,game_count=100):
                         poss.append(p)
                 if len(poss)>0:
                     end_flg=0
-                    
                     if cond.turn==0:
-                        
                         if isDebug:print("Executing model")
-                        mcts=MCTS(cond,model)
-                        next_move=mcts.get_move()[0]
+                        next_move=mcts.get_next_move(cond)[0]
                     else:
                         if isDebug:print("Executing random")
                         r=[1 for p in poss]
