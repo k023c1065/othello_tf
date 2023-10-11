@@ -1,24 +1,31 @@
 from othello import *
 import random
 from dataset import *
+import network
 import pickle
 import time
 from tqdm import tqdm
 import multiprocessing
 import cv2
 import tensorflow as tf
-def main(proc_num=None,play_num=10000,expand_rate=1):
+def main(proc_num=None,play_num=10000,expand_rate=1,isModel=False):
     IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
     if proc_num==1:
         IS_MULTI=False
     dataset=[[],[]]
+    if isModel:
+        model=network.raw_load_model()
+        if not tf.test.is_gpu_available():
+            IS_MULTI=False #Neural network will use full cpu cores and multiprocessing will be bad in this situation
+    else:
+        model=None
     if IS_MULTI:
         multiprocessing.freeze_support()
         Lock=multiprocessing.Manager().Lock()
         with multiprocessing.Pool(proc_num) as p:
-            pool_result=p.starmap(sub_create_dataset,[(play_num//proc_num,expand_rate,p_num,Lock) for p_num in range(proc_num)])
+            pool_result=p.starmap(sub_create_dataset,[(play_num//proc_num,expand_rate,p_num,Lock,model) for p_num in range(proc_num)])
         for r in pool_result:
             if len(dataset[0])<1:
                 dataset[0]=r[0]
@@ -27,7 +34,7 @@ def main(proc_num=None,play_num=10000,expand_rate=1):
                 dataset[0]=dataset[0]+r[0]
                 dataset[1]=np.concatenate([dataset[1], r[1]])
     else:
-        dataset=sub_create_dataset(play_num,expand_rate,None,None)
+        dataset=sub_create_dataset(play_num,expand_rate,None,None,model)
     dataset[1]=np.array(dataset[1],dtype="float32")
     # dataset[1]=(dataset[1]-dataset[1].mean())/dataset[1].std()
     # dataset[1]=dataset[1]-dataset[1].min()
@@ -37,9 +44,16 @@ def main(proc_num=None,play_num=10000,expand_rate=1):
     with open("./dataset/data.dat","wb") as f:
         pickle.dump(dataset,f)
     return dataset
-def sub_create_dataset(play_num,expand_rate,p_num,Lock):
+def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
     dataset=[[],[]]
+    if model is None:
+        isModel=False
+    else:
+        isModel=True
     for _ in tqdm(range(play_num)):
+        model_usage=[0,0]
+        if isModel:
+            model_usage=[(_%4)//2,(_%4)%2]
         cond=game_cond()
         data=[[],[]]
         end_flg=0
@@ -55,7 +69,11 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock):
                     poss.append(p)
             if len(poss)>0:
                 end_flg=0
-                next_move=random.choice(poss)
+                if model_usage[cond.turn]==0:
+                    next_move=random.choice(poss)
+                else:
+                    mcts=MCTS(cond,model)
+                    next_move=mcts.get_move()[0]
                 data[cond.turn].append([cond.board,next_move,poss])
                 cond.move(next_move[0],next_move[1])
             else:
