@@ -11,7 +11,7 @@ import sys
 moduleList = sys.modules
 ENV_COLAB = False
 if 'google.colab' in moduleList:
-    print("google_colab")
+    print("Is google_colab")
     ENV_COLAB = True
 else:
     print("Not google_colab")
