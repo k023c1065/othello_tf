@@ -229,14 +229,16 @@ import random,time
 
 
 class MCTS():
-    def __init__(self,cond:game_cond,model):
+    def __init__(self,cond:game_cond,model,search_rate=1):
         self.model=model
         self.uct_c=2**0.5
         self.qc_limit=50
         self.roll_out_limit=100
         self.time_limit=6
         self.q_board_dict={}
-    
+        self.search_rate=1
+    def change_search_rate(self,rate):
+        self.search_rate=rate
     def get_next_move(self,cond):
         qc_score=[]
         self.play_count={}
@@ -256,7 +258,7 @@ class MCTS():
             for move in n_moves:
                 cond.move(move[0],move[1])
                 cond.flip_board()
-                
+
             # Expand
             poss=[]
             for p in cond.placable:
@@ -321,12 +323,12 @@ class MCTS():
                     
         #print(poss)
         #print("MCTS END")
+        poss_qc=[]
         for p in poss:
             key=self.sub_key(p)
-            if r[1]<self.play_count[key]:
-                r[1]=self.play_count[key]
-                r[0]=[key%8,key//8]
-        return r
+            poss_qc.append(self.play_count[key]**(1/self.search_rate))
+        r=random.choices(poss,weights=poss_qc,k=1)[0]
+        return [r,0]
         
             
     def get_key(self,moves:list):
@@ -356,6 +358,7 @@ class ab_search():
     def __init__(self,cond):
         self.init_cond=game_cond(cond)
     
+    
         
 def test_play(model,game_count=100):
     win_count=[0,0]
@@ -377,9 +380,7 @@ def test_play(model,game_count=100):
                         poss.append(p)
                 if len(poss)>0:
                     end_flg=0
-                    
                     if cond.turn==0:
-                        
                         if isDebug:print("Executing model")
                         next_move=mcts.get_next_move(cond)[0]
                     else:
