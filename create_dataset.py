@@ -60,7 +60,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
         end_flg=0
         s_t=time.time()
         while not(cond.isEnd() or end_flg>=2):
-            if time.time()-s_t>10:
+            if time.time()-s_t>10 and not isModel:
                 cond.show()
                 print(cond.isEnd(),end_flg<2)
                 time.sleep(10)
