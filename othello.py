@@ -44,7 +44,7 @@ class game_cond:
     def hash(self):
         flatten_board=self.board.flatten()
         hash=flatten_board*base_2
-        hash=np.base_repr(hash,36)+str(self.turn)
+        hash=np.base_repr(hash.sum(),36)+str(self.turn)
         return hash
     def is_movable(self,i,j):
         if not (i,j) in self.placable:
@@ -230,14 +230,12 @@ import random,time
 
 class MCTS():
     def __init__(self,cond:game_cond,model):
-        self.init_cond=game_cond(cond)
         self.model=model
         self.uct_c=2**0.5
         self.qc_limit=50
         self.roll_out_limit=100
         self.time_limit=6
         self.q_board_dict={}
-        
     
     def get_next_move(self,cond):
         qc_score=[]
@@ -274,11 +272,11 @@ class MCTS():
                 self.play_count[k]=1
             
             # Evaluate Q score for current leaf
-            if cond.board.hash() in self.q_board_dict:
-                r=self.q_board_dict[cond.board.hash()]
+            if cond.hash() in self.q_board_dict:
+                r=self.q_board_dict[cond.hash()]
             else:
                 r=np.array(self.model(np.transpose(cond.board[np.newaxis],[0,2,3,1]),training=False)[0]).reshape(8,8)
-                self.q_board_dict[cond.board.hash()]
+                self.q_board_dict[cond.hash()]=r
             for p in poss:
                 q=r[p[0]][p[1]]
                 self.qdict[key*64+self.sub_key(p)]=q
@@ -383,7 +381,7 @@ def test_play(model,game_count=100):
                     if cond.turn==0:
                         
                         if isDebug:print("Executing model")
-                        next_move=mcts.get_move(cond)[0]
+                        next_move=mcts.get_next_move(cond)[0]
                     else:
                         if isDebug:print("Executing random")
                         r=[1 for p in poss]

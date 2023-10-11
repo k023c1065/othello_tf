@@ -74,7 +74,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
                 if model_usage[cond.turn]==0:
                     next_move=random.choice(poss)
                 else:
-                    next_move=mcts.get_move(cond)[0]
+                    next_move=mcts.get_next_move(cond)[0]
                 data[cond.turn].append([cond.board,next_move,poss])
                 cond.move(next_move[0],next_move[1])
             else:
@@ -102,4 +102,4 @@ def sfmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
 
 if __name__=="__main__":
-    main(proc_num=4,play_num=200,)
+    main(proc_num=4,play_num=64,isModel=True)
