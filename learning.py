@@ -3,14 +3,26 @@ import pickle
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 import pandas as pd
+from glob import glob
 model=None
 optimizer=None
 loss_object=None
 def main(EPOCH=10,batch_size=16,input_shape=(8,8,2),t_module=None):
     global model,optimizer,loss_object
     print("loading...",end="")
-    with open("dataset/data.dat","rb") as f:
-        dataset=pickle.load(f)
+    dataset_files=glob("./dataset/*.dat")
+    dataset=None
+    for file in dataset_files:
+        try:
+            with open("dataset/data.dat","rb") as f:
+                data=pickle.load(f)
+            if dataset is None:
+                dataset=data
+            else:
+                dataset[0]=np.concatenate([dataset[0],data[0]])
+                dataset[1]=np.concatenate([dataset[1],data[1]])
+        except pickle.PickleError:
+            print(f"Failed to pickle file:{file}. Skipping")
     print("Done")
     x,y=dataset[0],dataset[1]
     # y=y-y.mean()

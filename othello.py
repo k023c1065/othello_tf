@@ -37,10 +37,13 @@ class game_cond:
             
             self.placable={(2,2),(5,5),(2,5),(5,2),(2,3),(3,2),(4,5),(5,4),(3,5),(2,4),(5,3),(4,2)}
             self.turn=0
+            self.notChangedCount=0
+            self.moveflg=False
         else:
             self.board=deepcopy(cond.board)
             self.placable=deepcopy(cond.placable)
             self.turn=copy(cond.turn)
+            self.notChangedCount=copy(cond.notChangedCount)
     def hash(self):
         flatten_board=self.board.flatten()
         hash=flatten_board*base_2
@@ -113,6 +116,8 @@ class game_cond:
                     for x in const_direction:
                         if not(self.get_board2(new_axis,x,0) or self.get_board2(new_axis,x,1)):
                             self.placeable_add(new_axis,x)
+            self.notChangedCount=0
+            self.moveflg=True
     def placeable_add(self,axis,sub_axis):
         new_axis=[axis[0]+sub_axis[0],axis[1]+sub_axis[1]]
         new_axis[0]=min(7,max(0,new_axis[0]))
@@ -158,6 +163,8 @@ class game_cond:
                             return True
         return False
     def flip_board(self):
+        if not self.moveflg:
+            self.notChangedCount+=1
         self.turn=(self.turn+1)%2
     def isLegal(self,i,j):
         return i>=0 and i<8 and j>=0 and j<8   
@@ -234,7 +241,7 @@ class MCTS():
         self.uct_c=2**0.5
         self.qc_limit=50
         self.roll_out_limit=100
-        self.time_limit=6
+        self.time_limit=15
         self.q_board_dict={}
         self.search_rate=1
     def change_search_rate(self,rate):
@@ -251,6 +258,7 @@ class MCTS():
         n_moves=[]
         counter=0
         s_t=time.time()
+        long_flg=True
         while len(qc_score)<self.qc_limit and counter<self.roll_out_limit and time.time()-s_t<self.time_limit:
             counter+=1
             # Moves to parent leaf
@@ -258,7 +266,6 @@ class MCTS():
             for move in n_moves:
                 cond.move(move[0],move[1])
                 cond.flip_board()
-
             # Expand
             poss=[]
             for p in cond.placable:
@@ -316,13 +323,7 @@ class MCTS():
                 qc[0]=0
         r=[None,0]
         poss=[]
-        #print("MCTS")
-        #self.init_cond.show()
-        #print(self.init_cond.placable,self.init_cond.turn)
         poss=self.move_poss_dict[0]
-                    
-        #print(poss)
-        #print("MCTS END")
         poss_qc=[]
         for p in poss:
             key=self.sub_key(p)
@@ -357,6 +358,7 @@ class MCTS():
 class ab_search():
     def __init__(self,cond):
         self.init_cond=game_cond(cond)
+    
     
     
         

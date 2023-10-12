@@ -9,26 +9,25 @@ import multiprocessing
 import cv2
 import tensorflow as tf
 
-def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False):
-
+def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False):
     IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
-    if proc_num==1:
+    if proc_num==1 and not ForceUseMulti:
         IS_MULTI=False
     if play_num is None:
         play_num=sub_play_count*proc_num
     dataset=[[],[]]
     if isModel:
         model=network.raw_load_model()
-        if IS_MULTI and not tf.test.is_gpu_available():
+        if IS_MULTI and len(tf.config.list_physical_devices('GPU'))<1 and not ForceUseMulti:
             print("Multi processing feature will be ignored")
             IS_MULTI=False #Neural network will use full cpu cores and multiprocessing will be bad in this situation
     else:
         model=None
     if IS_MULTI:
         multiprocessing.freeze_support()
-        Lock=multiprocessing.Manager().Lock()
+        Lock=None
         with multiprocessing.Pool(proc_num) as p:
             pool_result=p.starmap(sub_create_dataset,[(play_num//proc_num,expand_rate,p_num,Lock,model) for p_num in range(proc_num)])
         for r in pool_result:
@@ -103,5 +102,4 @@ def sfmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
 
 if __name__=="__main__":
-
     main(proc_num=4,play_num=64,isModel=True)
