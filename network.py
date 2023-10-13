@@ -211,7 +211,7 @@ class train_module():
         self.optimizer=optimizer
         self.last_train=None
         self.train_count=0
-        self.train_loss=[[],[]]
+        self.train_loss=[]
         self.test_loss=[[],[]]
         self.plt_file_name="loss_graph.png"
     @tf.function
@@ -249,7 +249,7 @@ class train_module():
                     if not random.randint(1,skip_rate_cap)==1:
                         loss=self.train_step(images,labels)
                         self.train_count+=1
-                        self.train_loss.append(loss_array)
+                        self.train_loss.append(np.mean(np.array(loss)))
                         loss_array.append(np.mean(np.array(loss)))
                         t.set_description(f"loss:{np.round(float(np.mean(loss_array)),decimals=5)}")
                         t.update()
@@ -269,6 +269,7 @@ class train_module():
         plt.grid()
         plt.legend()
         plt.savefig(self.plt_file_name)
+        plt.close()
     def save_model(self,model_path="./model/"):
         model_file_name=str(datetime.now())+".h5"
         self.model.save_weights(model_path+model_file_name)
