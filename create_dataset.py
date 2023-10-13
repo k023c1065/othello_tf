@@ -8,7 +8,7 @@ from tqdm import tqdm
 import multiprocessing
 import cv2
 import tensorflow as tf
-
+import datetime
 def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False):
     IS_MULTI=True
     if proc_num is None:
@@ -42,7 +42,7 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
     dataset[1]=np.array(dataset[1],dtype="float32")
     dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),dataset[1]]
     print(dataset[0].shape,dataset[1].shape)
-    with open("./dataset/data.dat","wb") as f:
+    with open(f"./dataset/data{datetime.datetime.now()}.dat","wb") as f:
         pickle.dump(dataset,f)
     return dataset
 def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
@@ -102,4 +102,4 @@ def sfmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
 
 if __name__=="__main__":
-    main(proc_num=4,play_num=64,isModel=True)
+    main(proc_num=6,play_num=None,sub_play_count=1024,isModel=True,ForceUseMulti=False)

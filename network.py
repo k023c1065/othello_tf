@@ -261,8 +261,8 @@ class train_module():
             self.save_fig()
             self.save_model()
     def save_fig(self):
-        plt.plot([i for i in range(len(self.train_loss))],self.train_loss,labels="train")
-        plt.plot(self.test_loss[0],self.test_loss[1],labels="test")
+        plt.plot([i for i in range(len(self.train_loss))],self.train_loss,label="train")
+        plt.plot(self.test_loss[0],self.test_loss[1],label="test")
         plt.grid()
         plt.legend()
         plt.savefig(self.plt_file_name)
