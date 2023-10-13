@@ -9,6 +9,7 @@ import os
 from tqdm import tqdm
 from datetime import datetime
 import sys
+import random
 moduleList = sys.modules
 ENV_COLAB = False
 if 'google.colab' in moduleList:
@@ -236,20 +237,22 @@ class train_module():
         t_loss = self.loss_object(labels, predictions)
         return t_loss
     
-    def start_train(self,train_ds,test_ds,EPOCH=10):
+    def start_train(self,train_ds,test_ds,EPOCH=10,skip_rate=0.001):
         print("last train:",self.last_train)
+        skip_rate_cap=1//skip_rate
         for e in range(EPOCH):
             self.last_train=datetime.now()
             print("EPOCH:",e)
             loss_array=[]
             with tqdm(train_ds) as t:
                 for images,labels in t:
-                    loss=self.train_step(images,labels)
-                    self.train_count+=1
-                    self.train_loss.append(loss_array)
-                    loss_array.append(np.mean(np.array(loss)))
-                    t.set_description(f"loss:{np.round(float(np.mean(loss_array)),decimals=5)}")
-                    t.update()
+                    if not random.randint(1,skip_rate_cap)==1:
+                        loss=self.train_step(images,labels)
+                        self.train_count+=1
+                        self.train_loss.append(loss_array)
+                        loss_array.append(np.mean(np.array(loss)))
+                        t.set_description(f"loss:{np.round(float(np.mean(loss_array)),decimals=5)}")
+                        t.update()
             print("train loss:",np.mean(loss),end="     ")
             loss_array=[]
             for images,labels in test_ds:
