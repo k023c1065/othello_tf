@@ -14,7 +14,7 @@ def main(EPOCH=10,batch_size=16,input_shape=(8,8,2),t_module=None):
     dataset=None
     for file in dataset_files:
         try:
-            with open("dataset/data.dat","rb") as f:
+            with open(file,"rb") as f:
                 data=pickle.load(f)
             if dataset is None:
                 dataset=data
