@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import cv2
 import glob
 import os
-from tqdm import tqdm
+import tqdm as tq
 from datetime import datetime
 import sys
 import random
@@ -15,7 +15,9 @@ ENV_COLAB = False
 if 'google.colab' in moduleList:
     print("Is google_colab")
     ENV_COLAB = True
+    tqdm=tq.tqdm_notebook
 else:
+    tqdm=tq.tqdm
     print("Not google_colab")
 def raw_load_model():
     model=miniResNet((8,8,2),64)
@@ -244,6 +246,7 @@ class train_module():
             self.last_train=datetime.now()
             print("EPOCH:",e)
             loss_array=[]
+            skip_count=0
             with tqdm(train_ds) as t:
                 for images,labels in t:
                     if not random.randint(1,skip_rate_cap)==1:
@@ -253,6 +256,9 @@ class train_module():
                         loss_array.append(np.mean(np.array(loss)))
                         t.set_description(f"loss:{np.round(float(np.mean(loss_array)),decimals=5)}")
                         t.update()
+                    else:
+                        skip_count+=1
+            print("skip_count:",skip_count,end="    ")
             print("train loss:",np.mean(loss),end="     ")
             loss_array=[]
             for images,labels in test_ds:
@@ -264,7 +270,8 @@ class train_module():
             self.save_fig()
             self.save_model()
     def save_fig(self):
-        plt.plot([i for i in range(len(self.train_loss))],self.train_loss,label="train")
+        train_loss=get_moving_ave(self.train_loss)
+        plt.plot([i for i in range(len(self.train_loss))],train_loss,label="train")
         plt.plot(self.test_loss[0],self.test_loss[1],label="test")
         plt.grid()
         plt.legend()
@@ -277,5 +284,17 @@ class train_module():
             self.model.save_weights("./drive/MyDrive/model/"+model_file_name)
         print("model saved as ",model_file_name)
             
-
+def get_moving_ave(data,b=100,result=None):
+    length=len(data)
+    temp=[]
+    if result is None:
+        result=[]
+    init_len=len(result)
+    for d in data[init_len:]:
+        i=len(result)
+        temp.append(d)
+        if i>=b:
+            temp.pop(0)
+        result.append(np.mean(temp))
+    return result
                 
