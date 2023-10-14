@@ -4,6 +4,7 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 import pandas as pd
 from glob import glob
+import math
 model=None
 optimizer=None
 loss_object=None
@@ -37,9 +38,10 @@ def main(EPOCH=10,batch_size=16,input_shape=(8,8,2),t_module=None):
     #=train_test_split(,random_state=0)
     print(x_train.shape)
     print(y_train.shape)
+    test_batch_size=max(128,min(int(2**(int(math.log2(len(x_test)))-2)),2048))
     test_ds = tf.data.Dataset.from_tensor_slices(
                 (x_test,y_test)
-            ).batch(128)
+            ).batch(test_batch_size)
     train_ds = tf.data.Dataset.from_tensor_slices(
             (x_train, y_train)).shuffle(10000,reshuffle_each_iteration=True).batch(batch_size)
     model=miniResNet(input_shape,64)
