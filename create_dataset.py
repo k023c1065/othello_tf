@@ -6,7 +6,6 @@ import pickle
 import time
 from tqdm import tqdm
 import multiprocessing
-import cv2
 import tensorflow as tf
 import datetime
 def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False):

@@ -3,7 +3,6 @@ import keras
 from keras import layers as kl
 import numpy as np
 import matplotlib.pyplot as plt
-import cv2
 import glob
 import os
 import tqdm as tq
@@ -27,7 +26,7 @@ def raw_load_model():
         model_file=max(model_files,key=os.path.getctime)    
         model.load_weights(model_file)
     except FileNotFoundError:
-       raise FileNotFoundError("Model filed failed to get\n",
+       raise FileNotFoundError("failed to get Model file(s) \n",
                                f"Expected File:{model_file}"
                                f"targeted Files:{model_files}")
         
