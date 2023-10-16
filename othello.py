@@ -383,7 +383,7 @@ class minimax_search():
         if len(poss)==0:
             b=game_cond(board)
             b.flip_board()
-            score,_ = minimax(b)
+            score,_ = self.minimax(b)
             score=1-score
             if score > best_score:
                 best_score = score
@@ -394,7 +394,7 @@ class minimax_search():
                 b.move(move[0],move[1])
                 b.flip_board()
                 #　スコアは必ず[0,1]となるので1-scoreとすることで相手のスコアを取得することができる
-                score,_ = minimax(b)
+                score,_ = self.minimax(b)
                 score=1-score
                 if score > best_score:
                     best_score = score
@@ -435,7 +435,8 @@ def test_play(model,game_count=100):
                         if isDebug:print("Executing model")
                         if 64-(cond.board[0].sum()+cond.board[1].sum())<=8:
                             s,next_move=minimax.get_move(cond)
-                        next_move=mcts.get_next_move(cond)[0]
+                        else:
+                            next_move=mcts.get_next_move(cond)[0]
                     else:
                         if isDebug:print("Executing random")
                         r=[1 for p in poss]
