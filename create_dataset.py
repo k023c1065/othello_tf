@@ -75,7 +75,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
                     next_move=random.choice(poss)
                 else:
                     if cond.board[0].sum()+cond.board[1].sum()>=56:
-                        next_move=minimax.get_move(cond)
+                        s,next_move=minimax.get_move(cond)
                     else:
                         next_move=mcts.get_next_move(cond)[0]
                 data[cond.turn].append([cond.board,next_move,poss])
