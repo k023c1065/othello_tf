@@ -184,7 +184,7 @@ class game_cond:
         else:
             return ALLWAYSFALSE()
     def isEnd(self):
-        return not(len(self.placable)>0 and self.board[0].sum()>0 and self.board[1].sum()>0)
+        return len(self.placable)<1 or self.board[0].sum()<1 or self.board[1].sum()<1 or self.notChangedCount>=2
     def isBlank(self,i,j):
         return not(self.board[0][i][j] or self.board[1][i][j])
     def get_score(self):
