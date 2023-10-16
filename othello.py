@@ -84,6 +84,9 @@ class game_cond:
         return self.get_board(new_axis,turn)
     
     def move(self,i,j):
+        # Special if function for turn skip
+        if i==-1 and j==-1:
+            return
         r=self.OpponentAround(i,j,(self.turn+1)%2)
         target_axis=[1,1]
         if i==0:
@@ -183,6 +186,9 @@ class game_cond:
         return not(self.board[0][i][j] or self.board[1][i][j])
     def get_score(self):
         return self.board[0].sum(),self.board[1].sum()
+    def get_score_float(self):
+        s=list(self.get_score)
+        return s[(self.turn+1)%2]/sum(s)
     def show(self):
         print(" 0 1 2 3 4 5 6 7")
         for i in range(8):
@@ -233,7 +239,7 @@ if __name__=="__main__":
             exit()
     
 import random,time
-
+from collections import deque
 
 class MCTS():
     def __init__(self,cond:game_cond,model,search_rate=1):
@@ -355,16 +361,59 @@ class MCTS():
             moves.reverse()
         return moves
         
-class ab_search():
+class minimax_search():
+    def __init__(self):
+        self.cache={}
+    #From https://zero2one.jp/learningblog/mini-max-alpha-beta/
+    #Thank You!
+    def get_move(self,board:game_cond):
+        if board.hash() in self.cache:
+            return self.cache[board.hash()]
+        if board.isEnd():
+            return board.get_score_float(),None
+        best_score = -10
+        best_move=[]
+        # 全ての可能な手について評価関数を計算
+
+        poss=[]
+        for p in board.placable:
+            if cond.is_movable(p[0],p[1]):
+                poss.append(p)
+        #　打つ手がない場合のみ手番をスキップすることができる
+        if len(poss)==0:
+            b=game_cond(board)
+            b.flip_board()
+            score,_ = minimax(b)
+            score=1-score
+            if score > best_score:
+                best_score = score
+                best_move=[-1,-1]
+        else:
+            for move in poss:
+                b=game_cond(board)
+                b.move(move[0],move[1])
+                b.flip_board()
+                #　スコアは必ず[0,1]となるので1-scoreとすることで相手のスコアを取得することができる
+                score,_ = minimax(b)
+                score=1-score
+                if score > best_score:
+                    best_score = score
+                    best_move=move
+        self.cache[board.hash()]=(best_score,best_move)
+        return best_score,best_move
+    
+class game_tree():
     def __init__(self,cond):
         self.init_cond=game_cond(cond)
-    
-    
+        
+    def get_tree(self):
+        q=deque()
     
         
 def test_play(model,game_count=100):
     win_count=[0,0]
     mcts=MCTS(game_cond(),model)
+    minimax=minimax_search()
     if game_count==1:
         isDebug=True
     else:
@@ -384,6 +433,8 @@ def test_play(model,game_count=100):
                     end_flg=0
                     if cond.turn==0:
                         if isDebug:print("Executing model")
+                        if 64-(cond.board[0].sum()+cond.board[1].sum())<=8:
+                            s,next_move=minimax.get_move(cond)
                         next_move=mcts.get_next_move(cond)[0]
                     else:
                         if isDebug:print("Executing random")
