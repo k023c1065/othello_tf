@@ -350,7 +350,7 @@ class minimax_search():
         if len(poss)==0:
             b=game_cond(board)
             b.flip_board()
-            score,_ = self.minimax(b)
+            score,_ = self.get_move(b)
             score=1-score
             if score > best_score:
                 best_score = score
@@ -361,7 +361,7 @@ class minimax_search():
                 b.move(move[0],move[1])
                 b.flip_board()
                 #　スコアは必ず[0,1]となるので1-scoreとすることで相手のスコアを取得することができる
-                score,_ = self.minimax(b)
+                score,_ = self.get_move(b)
                 score=1-score
                 if score > best_score:
                     best_score = score
