@@ -106,4 +106,11 @@ def sfmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
 
 if __name__=="__main__":
-    main(proc_num=6,play_num=1024,isModel=True,ForceUseMulti=False)
+    import argparse
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--num",type=int,default=1024)
+    parser.add_argument("--pnum",type=int,default=1)
+    parser=parser.parse_args()
+    proc_num=parser.pnum
+    play_num=parser.num
+    main(proc_num,play_num,isModel=True,ForceUseMulti=False)
