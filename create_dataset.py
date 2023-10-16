@@ -8,6 +8,7 @@ from tqdm import tqdm
 import multiprocessing
 import tensorflow as tf
 import datetime
+import sys
 def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False):
     IS_MULTI=True
     if proc_num is None:

@@ -1,5 +1,7 @@
 import numpy as np
 from collections import deque
+import sys
+sys.setrecursionlimit(10**6)
 class ALLWAYSFALSE:
     def __init__(self):
         pass
