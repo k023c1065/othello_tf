@@ -27,7 +27,7 @@ from copy import copy,deepcopy
 base_2=[2**i for i in range(128)]
 class game_cond:
     def __init__(self,cond=None):
-        
+        self.moveflg=False
         if cond is None:
             self.board=np.zeros((2,8,8),dtype=bool)
             self.board[0][3][3]=True
@@ -168,6 +168,7 @@ class game_cond:
     def flip_board(self):
         if not self.moveflg:
             self.notChangedCount+=1
+        self.moveflg=False
         self.turn=(self.turn+1)%2
     def isLegal(self,i,j):
         return i>=0 and i<8 and j>=0 and j<8   
