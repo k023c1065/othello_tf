@@ -204,40 +204,7 @@ class game_cond:
         print()
 
 if __name__=="__main__":
-    import random,traceback,time
-    from learning import ResNet
-    model=ResNet((2,8,8),64)
-    while True:
-        try:
-            s_t=time.time()
-            cond=game_cond()
-            #cond.show()
-            end_flg=0
-            while not cond.isEnd():
-                poss=[]
-                for p in cond.placable:
-                    if cond.is_movable(p[0],p[1]):
-                        poss.append(p)
-                if len(poss)>0:
-                    end_flg=0
-                    next_move=random.choice(poss)
-                    cond.move(next_move[0],next_move[1])
-                else:
-                    end_flg+=1
-                cond.show()
-                cond.flip_board()
-                if time.time()-s_t>5:
-                    cond.show()
-                    time.sleep(1)
-            print("\r",cond.board[0].sum(),cond.board[1].sum(),"time_taken:",round(time.time()-s_t,5),end="                           ")
-        except KeyboardInterrupt:
-            print(traceback.format_exc())
-            exit()
-        except Exception:
-            print(traceback.format_exc())
-            cond.show()
-            exit()
-    
+    pass
 import random,time
 from collections import deque
 
@@ -377,7 +344,7 @@ class minimax_search():
 
         poss=[]
         for p in board.placable:
-            if cond.is_movable(p[0],p[1]):
+            if board.is_movable(p[0],p[1]):
                 poss.append(p)
         #　打つ手がない場合のみ手番をスキップすることができる
         if len(poss)==0:
