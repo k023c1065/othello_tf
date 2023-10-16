@@ -188,7 +188,7 @@ class game_cond:
     def get_score(self):
         return self.board[0].sum(),self.board[1].sum()
     def get_score_float(self):
-        s=list(self.get_score)
+        s=list(self.get_score())
         return s[(self.turn+1)%2]/sum(s)
     def show(self):
         print(" 0 1 2 3 4 5 6 7")
