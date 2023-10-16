@@ -344,7 +344,6 @@ class minimax_search():
         best_score = -10
         best_move=[]
         # 全ての可能な手について評価関数を計算
-
         poss=[]
         for p in board.placable:
             if board.is_movable(p[0],p[1]):
@@ -365,19 +364,13 @@ class minimax_search():
                 b.flip_board()
                 #　スコアは必ず[0,1]となるので1-scoreとすることで相手のスコアを取得することができる
                 score,_ = self.get_move(b)
-                score=1-score
+                score = 1-score
                 if score > best_score:
                     best_score = score
                     best_move=move
         self.cache[board.hash()]=(best_score,best_move)
         return best_score,best_move
     
-class game_tree():
-    def __init__(self,cond):
-        self.init_cond=game_cond(cond)
-        
-    def get_tree(self):
-        q=deque()
     
         
 def test_play(model,game_count=100):
