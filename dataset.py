@@ -10,10 +10,10 @@ def move2board(move,turn):
     return a
 
 class gdrive_dataset():
-    #Will make this folder public in futre
+    #Will make this folder public in future
     FOLDER_ID="1ooAjVn2MUGs4fy2FK4wLMK24bm0EfqaJ"
     def __init__(self):
-        gauth = GoogleAuth()
+        gauth = GoogleAuth(settings_file='setting.yaml')
         gauth.CommandLineAuth()
         self.drive = GoogleDrive(gauth)
     def get_dataset_list(self):

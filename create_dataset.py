@@ -28,6 +28,7 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
     i=0
     if isLoop:
         gdrive=gdrive_dataset()
+        gdrive.transfer_dataset()
     while isLoop or i==0:
         i+=1
         dataset=[[],[]]
