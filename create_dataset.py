@@ -53,7 +53,8 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         print(dataset[0].shape,dataset[1].shape)
         with open(f"./dataset/data{datetime.datetime.now()}.dat".replace(" ","_"),"wb") as f:
             pickle.dump(dataset,f)
-        gdrive.transfer_dataset()
+        if isGDrive:
+            gdrive.transfer_dataset()
     return dataset
 def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
     dataset=[[],[]]
