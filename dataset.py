@@ -32,5 +32,5 @@ class gdrive_dataset():
             if not d in gdrive_d:
                 file=self.drive.CreateFile({"parents": [{"id": self.FOLDER_ID}]})
                 file.SetContentFile("dataset/"+d)
-                file.upload()
+                file.Upload()
 
