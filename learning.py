@@ -34,7 +34,7 @@ def main(EPOCH=10,batch_size=16,input_shape=(8,8,2),t_module=None):
     print(pd.DataFrame(pd.Series(x[:min(len(x),30000)].ravel()).describe()).transpose())
     print(pd.DataFrame(pd.Series(np.array(y[:min(len(y),30000)],dtype="float32").reshape(min(y.shape[0],30000),64).ravel()).describe()).transpose())
     print("-------Describe End------")
-    x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.25,random_state=0)
+    x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.25,random_state=random.randint(0,2**60))
     #=train_test_split(,random_state=0)
     print(x_train.shape)
     print(y_train.shape)
@@ -43,7 +43,7 @@ def main(EPOCH=10,batch_size=16,input_shape=(8,8,2),t_module=None):
                 (x_test,y_test)
             ).batch(test_batch_size)
     train_ds = tf.data.Dataset.from_tensor_slices(
-            (x_train, y_train)).shuffle(10000,reshuffle_each_iteration=True).batch(batch_size)
+            (x_train, y_train)).shuffle(100000,reshuffle_each_iteration=True).batch(batch_size)
     model=miniResNet(input_shape,64)
     #model=ConvModel(input_shape,64)
     print(np.zeros(input_shape)[np.newaxis].shape)
