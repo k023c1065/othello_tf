@@ -9,7 +9,7 @@ import multiprocessing
 import tensorflow as tf
 import datetime
 import sys
-def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False):
+def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False,isLoop=False):
     IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
@@ -17,7 +17,7 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         IS_MULTI=False
     if play_num is None:
         play_num=sub_play_count*proc_num
-    dataset=[[],[]]
+    
     if isModel:
         model=network.raw_load_model()
         if IS_MULTI and len(tf.config.list_physical_devices('GPU'))<1 and not ForceUseMulti:
@@ -25,25 +25,32 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
             IS_MULTI=False #Neural network will use full cpu cores and multiprocessing will be bad in this situation
     else:
         model=None
-    if IS_MULTI:
-        multiprocessing.freeze_support()
-        Lock=None
-        with multiprocessing.Pool(proc_num) as p:
-            pool_result=p.starmap(sub_create_dataset,[(play_num//proc_num,expand_rate,p_num,Lock,model) for p_num in range(proc_num)])
-        for r in pool_result:
-            if len(dataset[0])<1:
-                dataset[0]=r[0]
-                dataset[1]=r[1]
-            else:
-                dataset[0]=dataset[0]+r[0]
-                dataset[1]=np.concatenate([dataset[1], r[1]])
-    else:
-        dataset=sub_create_dataset(play_num,expand_rate,None,None,model)
-    dataset[1]=np.array(dataset[1],dtype="float32")
-    dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),dataset[1]]
-    print(dataset[0].shape,dataset[1].shape)
-    with open(f"./dataset/data{datetime.datetime.now()}.dat","wb") as f:
-        pickle.dump(dataset,f)
+    i=0
+    if isLoop:
+        gdrive=gdrive_dataset()
+    while isLoop or i==0:
+        i+=1
+        dataset=[[],[]]
+        if IS_MULTI:
+            multiprocessing.freeze_support()
+            Lock=None
+            with multiprocessing.Pool(proc_num) as p:
+                pool_result=p.starmap(sub_create_dataset,[(play_num//proc_num,expand_rate,p_num,Lock,model) for p_num in range(proc_num)])
+            for r in pool_result:
+                if len(dataset[0])<1:
+                    dataset[0]=r[0]
+                    dataset[1]=r[1]
+                else:
+                    dataset[0]=dataset[0]+r[0]
+                    dataset[1]=np.concatenate([dataset[1], r[1]])
+        else:
+            dataset=sub_create_dataset(play_num,expand_rate,None,None,model)
+        dataset[1]=np.array(dataset[1],dtype="float32")
+        dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),dataset[1]]
+        print(dataset[0].shape,dataset[1].shape)
+        with open(f"./dataset/data{datetime.datetime.now()}.dat","wb") as f:
+            pickle.dump(dataset,f)
+        gdrive.transfer_dataset()
     return dataset
 def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
     dataset=[[],[]]
@@ -113,4 +120,4 @@ if __name__=="__main__":
     parser=parser.parse_args()
     proc_num=parser.pnum
     play_num=parser.num
-    main(proc_num,play_num,isModel=True,ForceUseMulti=False)
+    main(proc_num,play_num,isModel=True,ForceUseMulti=False,isLoop=True)
