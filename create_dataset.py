@@ -9,7 +9,7 @@ import multiprocessing
 import tensorflow as tf
 import datetime
 import sys
-def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False,isLoop=False):
+def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False,isGDrive=False):
     IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
@@ -26,10 +26,12 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
     else:
         model=None
     i=0
-    if isLoop:
-        gdrive=gdrive_dataset()
+    gdrive=gdrive_dataset()
+    if isGDrive:
         gdrive.transfer_dataset()
-    while isLoop or i==0:
+    else:
+        gdrive.get_dataset()
+    while isGDrive or i==0:
         i+=1
         dataset=[[],[]]
         if IS_MULTI:

@@ -32,5 +32,12 @@ class gdrive_dataset():
             if not d in gdrive_d:
                 file=self.drive.CreateFile({"parents": [{"id": self.FOLDER_ID}]})
                 file.SetContentFile("dataset/"+d)
+                print("Uploading:",d)
                 file.Upload()
+    def get_dataset(self):
+        query=f'"{self.FOLDER_ID}" in parents'
+        files = self.drive.ListFile({'q':query}).GetList()
+        for f in files:
+            f.GetContentFile("./dataset/"+f["title"])
+
 
