@@ -373,14 +373,15 @@ class minimax_search():
     
     
         
-def test_play(model,game_count=100):
+def test_play(model,game_count=100,isDebug=None):
     win_count=[0,0]
     mcts=MCTS(game_cond(),model)
     minimax=minimax_search()
-    if game_count==1:
-        isDebug=True
-    else:
-        isDebug=False
+    if isDebug is None:
+        if game_count==1:
+            isDebug=True
+        else:
+            isDebug=False
     for _ in range(game_count):
         try:
             cond=game_cond()
@@ -405,7 +406,6 @@ def test_play(model,game_count=100):
                         r=[1 for p in poss]
                         next_move=random.choices(poss,weights=r)[0]
                     if isDebug:print("move:",next_move)
-                    
                     cond.move(next_move[0],next_move[1])
                 else:
                     end_flg+=1

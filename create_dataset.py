@@ -9,6 +9,21 @@ import multiprocessing
 import tensorflow as tf
 import datetime
 import sys
+class local_locker():
+    def __init__(self):
+        self.lock=False
+    def get_lock(self,id,time_out=0.1):
+        s_t=time.time()
+        while self.lock!=0 and time.time()-s_t<=time_out:
+            pass
+        if self.lock==0:
+            self.lock=id
+            return True
+        else:
+            return False
+    def release_lock(self,id,time_out=0.1):
+        if self.lock==id:
+            self.lock=0
 def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False,isGDrive=False):
     IS_MULTI=True
     if proc_num is None:
@@ -22,15 +37,13 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         model=network.raw_load_model()
         if IS_MULTI and len(tf.config.list_physical_devices('GPU'))<1 and not ForceUseMulti:
             print("Multi processing feature will be ignored")
-            IS_MULTI=False #Neural network will use full cpu cores and multiprocessing will be bad in this situation
+            # Neural network will use full cpu cores 
+            # and multiprocessing will be bad in this situation
+            IS_MULTI=False 
     else:
         model=None
     i=0
     gdrive=gdrive_dataset()
-    if isGDrive:
-        gdrive.transfer_dataset()
-    else:
-        gdrive.get_dataset()
     while isGDrive or i==0:
         i+=1
         dataset=[[],[]]
@@ -76,7 +89,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
             if time.time()-s_t>10 and not isModel:
                 cond.show()
                 print(cond.isEnd(),end_flg<2)
-                time.sleep(10)
+                raise TimeoutError("Took too much time to finish the round")
             poss=[]
             for p in cond.placable:
                 if cond.is_movable(p[0],p[1]):
@@ -121,7 +134,16 @@ if __name__=="__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument("--num",type=int,default=1024)
     parser.add_argument("--pnum",type=int,default=1)
+    parser.add_argument("--gdrive","-g",type=bool,default=False,action="store_true")
     parser=parser.parse_args()
     proc_num=parser.pnum
     play_num=parser.num
-    main(proc_num,play_num,isModel=True,ForceUseMulti=False,isLoop=True)
+    gflg=parser.gdrive
+    if not gflg:
+        main(proc_num,play_num,isModel=True,ForceUseMulti=False,isLoop=True)
+    else:
+        gdrive=gdrive_dataset()
+        gdrive.get_dataset()
+        gdrive.transfer_dataset()
+        
+        

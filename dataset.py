@@ -1,14 +1,54 @@
 import numpy as np
-import pydrive2
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 from glob import glob
-import os
+import pandas as pd
+from sklearn.model_selection import train_test_split
+import tensorflow as tf
+import random,pickle,math,os
+
 def move2board(move,turn):
     a=np.zeros((8,8))
     a[move[0]][move[1]]=1
     return a
-
+def loadDataset():
+    print("loading...",end="")
+    dataset_files=glob("./dataset/*.dat")
+    dataset=None
+    if len(dataset_files)<1:
+        raise FileNotFoundError("Files that matched the pattern seems to be none.\n",
+                                "Please check dataset folder.")
+    for file in dataset_files:
+        try:
+            with open(file,"rb") as f:
+                data=pickle.load(f)
+            if dataset is None:
+                dataset=data
+            else:
+                dataset[0]=np.concatenate([dataset[0],data[0]])
+                dataset[1]=np.concatenate([dataset[1],data[1]])
+        except pickle.PickleError:
+            print(f"Failed to pickle file:{file}. Skipping")
+    print("Done")
+    return dataset
+def dataset2tensor(dataset,batch_size):
+    x,y=dataset[0],dataset[1]
+    x=np.array(x,dtype="float32")
+    y=np.array(y,dtype="float32").reshape(y.shape[0],64)
+    print("---Describe of Dataset---")
+    print(pd.DataFrame(pd.Series(x[:min(len(x),30000)].ravel()).describe()).transpose())
+    print(pd.DataFrame(pd.Series(np.array(y[:min(len(y),30000)],dtype="float32").reshape(min(y.shape[0],30000),64).ravel()).describe()).transpose())
+    print("-------Describe End------")
+    x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.1,random_state=random.randint(0,2048))
+    print(x_train.shape)
+    print(y_train.shape)
+    test_batch_size=max(128,min(int(2**(int(math.log2(len(x_test)))-2)),2048))
+    test_ds = tf.data.Dataset.from_tensor_slices(
+                (x_test,y_test)
+            ).batch(test_batch_size)
+    train_ds = tf.data.Dataset.from_tensor_slices(
+            (x_train, y_train)).shuffle(100000,reshuffle_each_iteration=True).batch(batch_size)
+    return train_ds,test_ds
 class gdrive_dataset():
     #Will make this folder public in future
     FOLDER_ID="1ooAjVn2MUGs4fy2FK4wLMK24bm0EfqaJ"
@@ -26,6 +66,9 @@ class gdrive_dataset():
         files=[f["title"] for f in files]
         return files
     def transfer_dataset(self):
+        """
+            Transfers all dataset into Google Drive
+        """        
         dataset=self.get_dataset_list()
         gdrive_d=self.get_gdrive_list()
         for d in dataset:
@@ -35,6 +78,9 @@ class gdrive_dataset():
                 print("Uploading:",d)
                 file.Upload()
     def get_dataset(self):
+        """
+            Gets all dataset from Google Drive
+        """        
         query=f'"{self.FOLDER_ID}" in parents'
         files = self.drive.ListFile({'q':query}).GetList()
         for f in files:
