@@ -9,3 +9,6 @@
 /model
 client_secrets.json
 /setting.yaml
+.vscode/settings.json
+.vscode/*
+.vscode/

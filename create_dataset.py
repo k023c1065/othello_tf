@@ -14,7 +14,7 @@ class local_locker():
         self.lock=False
     def get_lock(self,id,time_out=0.1):
         s_t=time.time()
-        while self.lock!=0 and time.time()-s_t<=time_out:
+        while self.lock!=0 and (time_out<0 or time.time()-s_t<=time_out):
             pass
         if self.lock==0:
             self.lock=id
@@ -49,9 +49,11 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         dataset=[[],[]]
         if IS_MULTI:
             multiprocessing.freeze_support()
-            Lock=None
+            Lock=local_locker()
             with multiprocessing.Pool(proc_num) as p:
-                pool_result=p.starmap(sub_create_dataset,[(play_num//proc_num,expand_rate,p_num,Lock,model) for p_num in range(proc_num)])
+                pool_result=p.starmap(sub_create_dataset,
+                                      [(play_num//proc_num,expand_rate,p_num+1,Lock,model) for p_num in range(proc_num)],
+                                      )
             for r in pool_result:
                 if len(dataset[0])<1:
                     dataset[0]=r[0]
@@ -69,7 +71,7 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         if isGDrive:
             gdrive.transfer_dataset()
     return dataset
-def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
+def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None):
     dataset=[[],[]]
     if model is None:
         isModel=False
@@ -77,7 +79,8 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
         isModel=True
         mcts=MCTS(game_cond(),model)
         minimax=minimax_search()
-    for _ in tqdm(range(play_num)):
+    tqdm_obj=tqdm(play_num,position=p_num,leave=True)
+    for _ in range(play_num):
         model_usage=[0,0]
         if isModel:
             model_usage=[(_%4)//2,(_%4)%2]
@@ -121,6 +124,10 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock,model=None):
                         a[p[0]][p[1]]=1-score[i]/sum(score)
                 a/=a.reshape(64).sum()
                 dataset[1].append(a.reshape(64))
+        if Lock.get_lock(p_num,time_out=-1):
+            tqdm_obj.update(1)
+            Lock.release_lock(p_num)
+    tqdm_obj.close()
     # print("softmax")
     # dataset[1]=sfmax(dataset[1])
     # print("Done")
@@ -134,13 +141,15 @@ if __name__=="__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument("--num",type=int,default=1024)
     parser.add_argument("--pnum",type=int,default=1)
-    parser.add_argument("--gdrive","-g",type=bool,default=False,action="store_true")
+    parser.add_argument("--model","-m",action="store_true",default=False)
+    parser.add_argument("--gdrive","-g",default=False,action="store_true")
     parser=parser.parse_args()
     proc_num=parser.pnum
     play_num=parser.num
     gflg=parser.gdrive
+    mflg=parser.model
     if not gflg:
-        main(proc_num,play_num,isModel=True,ForceUseMulti=False,isLoop=True)
+        main(proc_num,play_num,isModel=mflg)
     else:
         gdrive=gdrive_dataset()
         gdrive.get_dataset()
