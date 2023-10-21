@@ -142,13 +142,14 @@ if __name__=="__main__":
     parser.add_argument("--num",type=int,default=1024)
     parser.add_argument("--pnum",type=int,default=1)
     parser.add_argument("--model","-m",action="store_true",default=False)
+    parser.add_argument("--transflg","-gt",default=False,action="store_true")
     parser.add_argument("--gdrive","-g",default=False,action="store_true")
     parser=parser.parse_args()
     proc_num=parser.pnum
     play_num=parser.num
-    gflg=parser.gdrive
+    transflg=parser.transflg
     mflg=parser.model
-    if not gflg:
+    if not transflg:
         main(proc_num,play_num,isModel=mflg)
     else:
         gdrive=gdrive_dataset()
