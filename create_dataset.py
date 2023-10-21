@@ -80,7 +80,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None):
         mcts=MCTS(game_cond(),model)
         minimax=minimax_search()
     tqdm_obj=tqdm(play_num,position=p_num-1,leave=False)
-    for _ in range(play_num):
+    for _ in tqdm_obj:
         model_usage=[0,0]
         if isModel:
             model_usage=[(_%4)//2,(_%4)%2]
@@ -124,9 +124,9 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None):
                         a[p[0]][p[1]]=1-score[i]/sum(score)
                 a/=a.reshape(64).sum()
                 dataset[1].append(a.reshape(64))
-        if Lock.get_lock(p_num,time_out=-1):
-            tqdm_obj.update(1)
-            Lock.release_lock(p_num)
+        # if Lock.get_lock(p_num,time_out=-1):
+        #     tqdm_obj.update(1)
+        #     Lock.release_lock(p_num)
     tqdm_obj.close()
     # print("softmax")
     # dataset[1]=sfmax(dataset[1])
