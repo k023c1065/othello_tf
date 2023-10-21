@@ -1,3 +1,4 @@
+import glob
 import numpy as np
 from collections import deque
 import sys
@@ -215,7 +216,7 @@ class MCTS():
     def __init__(self,cond:game_cond,model,search_rate=1):
         self.model=model
         self.uct_c=2**0.5
-        self.qc_limit=50
+        self.qc_limit=100
         self.roll_out_limit=100
         self.time_limit=15
         self.q_board_dict={}
@@ -341,7 +342,7 @@ class minimax_search():
             return self.cache[board.hash()]
         if board.isEnd():
             return board.get_score_float(),None
-        best_score = -10
+        best_score = 10
         best_move=[]
         # 全ての可能な手について評価関数を計算
         poss=[]
@@ -354,7 +355,7 @@ class minimax_search():
             b.flip_board()
             score,_ = self.get_move(b)
             score=1-score
-            if score > best_score:
+            if score < best_score:
                 best_score = score
                 best_move=[-1,-1]
         else:
@@ -365,7 +366,7 @@ class minimax_search():
                 #　スコアは必ず[0,1]となるので1-scoreとすることで相手のスコアを取得することができる
                 score,_ = self.get_move(b)
                 score = 1-score
-                if score > best_score:
+                if score < best_score:
                     best_score = score
                     best_move=move
         self.cache[board.hash()]=(best_score,best_move)
@@ -383,6 +384,7 @@ def test_play(model,game_count=100,isDebug=None):
         else:
             isDebug=False
     for _ in range(game_count):
+        ab_s=[]
         try:
             cond=game_cond()
             end_flg=0
@@ -399,6 +401,8 @@ def test_play(model,game_count=100,isDebug=None):
                         if isDebug:print("Executing model")
                         if 64-(cond.board[0].sum()+cond.board[1].sum())<=8:
                             s,next_move=minimax.get_move(cond)
+                            ab_s.append(s)
+                            if isDebug:print("s:",s)
                         else:
                             next_move=mcts.get_next_move(cond)[0]
                     else:
@@ -416,5 +420,18 @@ def test_play(model,game_count=100,isDebug=None):
             cond.show()
             raise KeyboardInterrupt()
         score=list(cond.get_score())
-        win_count[np.argmax(score)]+=1
+        win_side=np.argmax(score)
+        win_count[win_side]+=1
+        if win_side==1:
+            print("ab_s:",ab_s)
+        print("win_count:",win_count)
+        
     return win_count
+
+if __name__=="__main__":
+    f=glob.glob("model/*")[0]
+    import network
+    model=network.miniResNet((8,8,2),64)
+    model(np.empty((1,8,8,2)))
+    model.load_weights(f)
+    test_play(model,game_count=10,isDebug=False)
