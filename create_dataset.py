@@ -79,7 +79,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None):
         isModel=True
         mcts=MCTS(game_cond(),model)
         minimax=minimax_search()
-    tqdm_obj=tqdm(range(play_num),position=p_num-1,leave=False)
+    tqdm_obj=tqdm(range(play_num),position=0,leave=False)
     for _ in tqdm_obj:
         model_usage=[0,0]
         if isModel:
