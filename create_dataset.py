@@ -122,7 +122,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None):
                         a[d[1][0]][d[1][1]]=score[i]/sum(score)
                     else:
                         a[p[0]][p[1]]=1-score[i]/sum(score)
-                a/=a.reshape(64).sum()
+                a/=max(0.001,a.reshape(64).sum())
                 dataset[1].append(a.reshape(64))
         # if Lock.get_lock(p_num,time_out=-1):
         #     tqdm_obj.update(1)
