@@ -66,7 +66,7 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         dataset[1]=np.array(dataset[1],dtype="float32")
         dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),dataset[1]]
         print(dataset[0].shape,dataset[1].shape)
-        with open(f"./dataset/data{datetime.datetime.now()}.dat","wb") as f:
+        with open(f"./dataset/data.dat","wb") as f:
             pickle.dump(dataset,f)
         if isGDrive:
             gdrive.transfer_dataset()
