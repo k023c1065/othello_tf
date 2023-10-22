@@ -11,6 +11,7 @@ def move2board(move,turn):
     a=np.zeros((8,8))
     a[move[0]][move[1]]=1
     return a
+
 def loadDataset():
     print("loading...",end="")
     dataset_files=glob("./dataset/*.dat")
