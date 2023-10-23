@@ -271,7 +271,7 @@ class train_module():
             self.test_loss_unc.append(np.std(np.array(loss_array))/np.sqrt(len(loss_array)))
             self.test_loss[1].append(np.mean(np.array(loss_array)))
             self.test_loss[0].append(self.train_count)
-            test_inc=[get_linear_inc(self.test_loss[0][len(self.test_loss[0])*(1-0.5**i):],self.test_loss[1][len(self.test_loss[0])*(1-0.5**i)]) if  len(self.test_loss[0])*(1-0.5**i)>1 else 0 for i in range(3)]
+            test_inc=[get_linear_inc([self.test_loss[0][len(self.test_loss[0])*(1-0.5**i):]],[self.test_loss[1][len(self.test_loss[0])*(1-0.5**i)]]) if  len(self.test_loss[0])*(1-0.5**i)>1 else 0 for i in range(3)]
             print("\t test loss:",np.mean(np.array(loss_array)),"±",self.test_loss_unc[-1])
             for i in range(3):
                 
@@ -280,7 +280,8 @@ class train_module():
                     print('\033[31m',end="")
                 print(f" {100*(0.5**i)}%:{test_inc[i]}",end="")
                 if test_inc[i]>0:
-                    print('\033[0m')
+                    print('\033[0m',end="")
+                print()
             self.save_fig()
             self.save_model()
     def save_fig(self):
