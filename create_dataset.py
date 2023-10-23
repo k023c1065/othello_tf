@@ -32,19 +32,18 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         IS_MULTI=False
     if play_num is None:
         play_num=sub_play_count*proc_num
-    
-    if isModel:
-        model=network.raw_load_model()
-        if IS_MULTI and len(tf.config.list_physical_devices('GPU'))<1 and not ForceUseMulti:
-            print("Multi processing feature will be ignored")
-            # Neural network will use full cpu cores 
-            # and multiprocessing will be bad in this situation
-            IS_MULTI=False 
-    else:
-        model=None
     i=0
     gdrive=gdrive_dataset()
     while isGDrive or i==0:
+        if isModel:
+            model=network.raw_load_model()
+            if IS_MULTI and len(tf.config.list_physical_devices('GPU'))<1 and not ForceUseMulti:
+                print("Multi processing feature will be ignored")
+                # Neural network will use full cpu cores 
+                # and multiprocessing will be bad in this situation
+                IS_MULTI=False 
+        else:
+            model=None
         i+=1
         dataset=[[],[]]
         if IS_MULTI:
@@ -150,8 +149,9 @@ if __name__=="__main__":
     play_num=parser.num
     transflg=parser.transflg
     mflg=parser.model
+    gflg=parser.gdrive
     if not transflg:
-        main(proc_num,play_num,isModel=mflg)
+        main(proc_num,play_num,isModel=mflg,isGDrive=gflg)
     else:
         gdrive=gdrive_dataset()
         gdrive.get_dataset()
