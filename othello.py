@@ -388,7 +388,7 @@ class test_play():
                     if type(model[i]) is str:
                         print(f"Model file:{model[i]} has been specified as model for Player No:{i+1}")
                         model[i]=raw_load_model(model[i])
-            self.mcts=[MCTS(game_cond(),model[i]) if self.player[i]=="Model" else None for i in range(2) ]            
+            self.mcts=[MCTS(game_cond(),model[i]) if self.players[i]=="Model" else None for i in range(2) ]            
             self.game_count=game_count
             if self.isDebug is None:
                 if game_count==1:
@@ -397,10 +397,12 @@ class test_play():
                     self.isDebug=False
     def loop_game(self):
         win_count=[0,0]
+        
         for _ in range(self.game_count):
             ab_s=[]
             try:
                 cond=game_cond()
+                if self.isDebug:cond.show()
                 end_flg=0
                 print()
                 while not(cond.isEnd() or end_flg>=2):
@@ -445,66 +447,14 @@ class test_play():
             next_move=random.choices(poss,weights=r)[0]
         elif player == "Human":
             if self.isDebug:print("Executing Human inputs")
-            axis=[-1,-1]
+            axis=(-1,-1)
             while not axis in poss:
                 print("Allowed Move:",poss)
                 inp_axis=input("Please Enter your next Move:")
                 axis=[int(i) for i in inp_axis.split()]
+                axis=tuple(axis)
             next_move=axis
         return next_move,ab_s
-def test_play(player=["Model","Random"],game_count=100,isDebug=None):
-    win_count=[0,0]
-    mcts=MCTS(game_cond(),model)
-    minimax=minimax_search()
-    if isDebug is None:
-        if game_count==1:
-            isDebug=True
-        else:
-            isDebug=False
-    for _ in range(game_count):
-        ab_s=[]
-        try:
-            cond=game_cond()
-            end_flg=0
-            print()
-            while not(cond.isEnd() or end_flg>=2):
-                print("\rGame count:",_+1,"space left:",64-(cond.board[0]+cond.board[1]).sum(),end="        ")
-                poss=[]
-                for p in cond.placable:
-                    if cond.is_movable(p[0],p[1]):
-                        poss.append(p)
-                if len(poss)>0:
-                    end_flg=0
-                    if cond.turn==0:
-                        if isDebug:print("Executing model")
-                        if 64-(cond.board[0].sum()+cond.board[1].sum())<=8:
-                            s,next_move=minimax.get_move(cond)
-                            ab_s.append(s)
-                            if isDebug:print("s:",s)
-                        else:
-                            next_move=mcts.get_next_move(cond)[0]
-                    else:
-                        if isDebug:print("Executing random")
-                        r=[1 for p in poss]
-                        next_move=random.choices(poss,weights=r)[0]
-                    if isDebug:print("move:",next_move)
-                    cond.move(next_move[0],next_move[1])
-                else:
-                    end_flg+=1
-                if game_count==1:
-                    cond.show()
-                cond.flip_board()
-        except KeyboardInterrupt:
-            cond.show()
-            raise KeyboardInterrupt()
-        score=list(cond.get_score())
-        win_side=np.argmax(score)
-        win_count[win_side]+=1
-        if win_side==1:
-            print("ab_s:",ab_s)
-        print("win_count:",win_count)
-        
-    return win_count
 
 if __name__=="__main__":
     f=glob.glob("model/*")[0]

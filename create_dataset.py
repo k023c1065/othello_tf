@@ -24,7 +24,7 @@ class local_locker():
     def release_lock(self,id,time_out=0.1):
         if self.lock==id:
             self.lock=0
-def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False,isGDrive=False):
+def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False,isGDrive=False,time_limit=-1):
     IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
@@ -34,7 +34,8 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         play_num=sub_play_count*proc_num
     i=0
     gdrive=gdrive_dataset()
-    while isGDrive or i==0:
+    s_t=time.time()
+    while (isGDrive or i==0) and (time_limit<0 or time.time()-s_t<=time_limit):
         if isModel:
             model=network.raw_load_model()
             if IS_MULTI and len(tf.config.list_physical_devices('GPU'))<1 and not ForceUseMulti:
@@ -71,7 +72,7 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         if isGDrive:
             gdrive.transfer_dataset()
     return dataset
-def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None):
+def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None,s_t=0,time_limit=-1):
     dataset=[[],[]]
     if model is None:
         isModel=False
@@ -81,6 +82,8 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None):
         minimax=minimax_search()
     tqdm_obj=tqdm(range(play_num),position=0,leave=False)
     for _ in tqdm_obj:
+        if (not time_limit<0) and time.time()-s_t>time_limit:
+            break
         model_usage=[0,0]
         if isModel:
             model_usage=[(_%4)//2,(_%4)%2]
@@ -144,14 +147,16 @@ if __name__=="__main__":
     parser.add_argument("--model","-m",action="store_true",default=False)
     parser.add_argument("--transflg","-gt",default=False,action="store_true")
     parser.add_argument("--gdrive","-g",default=False,action="store_true")
+    parser.add_argument("--time","-t",type=int,default=-1)
     parser=parser.parse_args()
     proc_num=parser.pnum
     play_num=parser.num
     transflg=parser.transflg
     mflg=parser.model
     gflg=parser.gdrive
+    time_limit=parser.time
     if not transflg:
-        main(proc_num,play_num,isModel=mflg,isGDrive=gflg)
+        main(proc_num,play_num,isModel=mflg,isGDrive=gflg,time_limit=time_limit)
     else:
         gdrive=gdrive_dataset()
         gdrive.get_dataset()

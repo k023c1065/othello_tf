@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 import os
+from sklearn.linear_model import LinearRegression
 import tqdm as tq
 from datetime import datetime
 import sys
@@ -216,6 +217,7 @@ class train_module():
         self.train_count=0
         self.train_loss=[]
         self.test_loss=[[],[]]
+        self.test_loss_unc=[]
         self.plt_file_name="loss_graph.png"
     @tf.function
     def train_step(self,images, labels):
@@ -260,14 +262,25 @@ class train_module():
                     else:
                         skip_count+=1
             print("skip_count:",skip_count,end="    ")
-            print("train loss:",np.mean(loss),end="     ")
+            print("train loss:",float(np.mean(loss_array)),end="     ")
             loss_array=[]
             for images,labels in test_ds:
                 loss=self.test_step(images,labels)
                 loss_array.append(np.mean(loss))
-            print("test loss:",np.mean(np.array(loss_array)))
+            
+            self.test_loss_unc.append(np.std(np.array(loss_array))/np.sqrt(len(loss_array)))
             self.test_loss[1].append(np.mean(np.array(loss_array)))
             self.test_loss[0].append(self.train_count)
+            test_inc=[get_linear_inc(self.test_loss[0][len(self.test_loss[0])*(1-0.5**i):],self.test_loss[1][len(self.test_loss[0])*(1-0.5**i)]) if  len(self.test_loss[0])*(1-0.5**i)>1 else 0 for i in range(3)]
+            print("\t test loss:",np.mean(np.array(loss_array)),"±",self.test_loss_unc[-1])
+            for i in range(3):
+                
+                print("\t",end="")
+                if test_inc[i]>0:
+                    print('\033[31m',end="")
+                print(f" {100*(0.5**i)}%:{test_inc[i]}",end="")
+                if test_inc[i]>0:
+                    print('\033[0m')
             self.save_fig()
             self.save_model()
     def save_fig(self):
@@ -284,7 +297,11 @@ class train_module():
         if ENV_COLAB:
             self.model.save_weights("./drive/MyDrive/model/"+model_file_name)
         print("model saved as ",model_file_name)
-            
+    
+def get_linear_inc(x,y):
+    lr = LinearRegression()
+    lr.fit(x, y)
+    return lr.coef_[0]
 def get_moving_ave(data,b=100,result=None):
     length=len(data)
     temp=[]
