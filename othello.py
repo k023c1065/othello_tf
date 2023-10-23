@@ -2,6 +2,8 @@ import glob
 import numpy as np
 from collections import deque
 import sys
+
+from network import raw_load_model
 sys.setrecursionlimit(10**6)
 class ALLWAYSFALSE:
     def __init__(self):
@@ -373,8 +375,84 @@ class minimax_search():
         return best_score,best_move
     
     
-        
-def test_play(model,game_count=100,isDebug=None):
+class test_play():
+    def __init__(self,players=["Model","Random"],model=[None,None],game_count=100,isDebug=None):  
+            self.minimax=minimax_search()
+            self.isDebug=isDebug
+            self.players=players
+            for i,player in enumerate(self.players):
+                if player=="Model":
+                    if model[i]==None:
+                        self.players[i]="Random"
+                        print(f"Player No:{i+1} has been changed to Random.Please specify the model.")
+                    if type(model[i]) is str:
+                        print(f"Model file:{model[i]} has been specified as model for Player No:{i+1}")
+                        model[i]=raw_load_model(model[i])
+            self.mcts=[MCTS(game_cond(),model[i]) if self.player[i]=="Model" else None for i in range(2) ]            
+            self.game_count=game_count
+            if self.isDebug is None:
+                if game_count==1:
+                    self.isDebug=True
+                else:
+                    self.isDebug=False
+    def loop_game(self):
+        win_count=[0,0]
+        for _ in range(self.game_count):
+            ab_s=[]
+            try:
+                cond=game_cond()
+                end_flg=0
+                print()
+                while not(cond.isEnd() or end_flg>=2):
+                    print("\rGame count:",_+1,"space left:",64-(cond.board[0]+cond.board[1]).sum(),end="        ")
+                    poss=[]
+                    for p in cond.placable:
+                        if cond.is_movable(p[0],p[1]):
+                            poss.append(p)
+                    if len(poss)>0:
+                        end_flg=0
+                        next_move,ab_s=self.get_next_move(cond,poss,ab_s,self.players[cond.turn])
+                        if self.isDebug:print("move:",next_move)
+                        cond.move(next_move[0],next_move[1])
+                    else:
+                        end_flg+=1
+                    if self.game_count==1:
+                        cond.show()
+                    cond.flip_board()
+            except KeyboardInterrupt:
+                cond.show()
+                raise KeyboardInterrupt()
+            score=list(cond.get_score())
+            win_side=np.argmax(score)
+            win_count[win_side]+=1
+            if win_side==1:
+                print("ab_s:",ab_s)
+            print("win_count:",win_count)
+            
+        return win_count
+    def get_next_move(self,cond:game_cond,poss,ab_s,player):
+        if player == "Model":
+            if self.isDebug:print("Executing model")
+            if 64-(cond.board[0].sum()+cond.board[1].sum())<=8:
+                s,next_move=self.minimax.get_move(cond)
+                ab_s.append(s)
+                if self.isDebug:print("s:",s)
+            else:
+                next_move=self.mcts[cond.turn].get_next_move(cond)[0]
+        elif player == "Random":
+            if self.isDebug:print("Executing random")
+            r=[1 for p in poss]
+            next_move=random.choices(poss,weights=r)[0]
+        elif player == "Human":
+            if self.isDebug:print("Executing Human inputs")
+            axis=[-1,-1]
+            while not axis in poss:
+                print("Allowed Move:",poss)
+                inp_axis=input("Please Enter your next Move:")
+                axis=[int(i) for i in inp_axis.split()]
+            next_move=axis
+        return next_move,ab_s
+def test_play(player=["Model","Random"],game_count=100,isDebug=None):
     win_count=[0,0]
     mcts=MCTS(game_cond(),model)
     minimax=minimax_search()

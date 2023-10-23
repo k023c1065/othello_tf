@@ -18,12 +18,14 @@ if 'google.colab' in moduleList:
 else:
     tqdm=tq.tqdm
     print("Not google_colab")
-def raw_load_model():
+def raw_load_model(file_name=None):
     model=miniResNet((8,8,2),64)
     model(np.empty((1,8,8,2)))
     try:
         model_files=glob.glob("./model/*")
-        model_file=max(model_files,key=os.path.getctime)    
+        model_file=max(model_files,key=os.path.getctime)   
+        if type(file_name) is str:
+            model_file=file_name
         model.load_weights(model_file)
     except FileNotFoundError:
        raise FileNotFoundError("failed to get Model file(s) \n",
