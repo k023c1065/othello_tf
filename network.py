@@ -302,7 +302,7 @@ class train_module():
 def get_linear_inc(x,y):
     lr = LinearRegression()
     lr.fit(np.array(x).reshape(-1,1), np.array(y).reshape(-1,1))
-    return lr.coef_[0]
+    return lr.coef_[0][0]
 def get_moving_ave(data,b=100,result=None):
     length=len(data)
     temp=[]
