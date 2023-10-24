@@ -1,3 +1,4 @@
+from math import e
 from othello import *
 import random
 from dataset import *
@@ -33,7 +34,10 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
     if play_num is None:
         play_num=sub_play_count*proc_num
     i=0
-    gdrive=gdrive_dataset()
+    if isGDrive:
+        gdrive=gdrive_dataset()
+    else:
+        gdrive=None
     s_t=time.time()
     while (isGDrive or i==0) and (time_limit<0 or time.time()-s_t<=time_limit):
         if isModel:
