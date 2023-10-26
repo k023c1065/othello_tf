@@ -374,7 +374,7 @@ class minimax_search():
         self.cache[board.hash()]=(best_score,best_move)
         return best_score,best_move
     
-    
+from tqdm import tqdm_gui   
 class test_play():
     def __init__(self,players=["Model","Random"],model=[None,None],game_count=100,isDebug=None):  
             self.minimax=minimax_search()
@@ -455,11 +455,19 @@ class test_play():
                 axis=tuple(axis)
             next_move=axis
         return next_move,ab_s
-
+import os
 if __name__=="__main__":
-    f=glob.glob("model/*")[0]
+    fs=glob.glob("model/*")
+    fs=sorted(fs,key=os.path.getmtime)
+    f=fs[-1]
     import network
-    model=network.miniResNet((8,8,2),64)
-    model(np.empty((1,8,8,2)))
-    model.load_weights(f)
-    test_play(model,game_count=10,isDebug=False)
+    target_model=network.miniResNet((8,8,2),64)
+    target_model(np.empty((1,8,8,2)))
+    target_model.load_weights(f)
+    
+    if len(fs)>1:
+        baseline_model=network.raw_load_model(fs[-2])
+        
+    tp=test_play(players=["Model","Model"],model=[target_model,baseline_model],game_count=1000)
+    score=tp.loop_game()
+    print(score)

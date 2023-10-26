@@ -14,6 +14,13 @@ def main(EPOCH=10,batch_size=16,input_shape=(8,8,2),t_module=None):
         model=miniResNet(input_shape,64)
         print(np.zeros(input_shape)[np.newaxis].shape)
         model.build(np.zeros(input_shape)[np.newaxis].shape)
+        mfs=glob.glob("./model/*.h5")
+        if len(mfs)>0:
+            load_model_flg=input("Seems like we got model file(s) in model folder."+
+                                "Do you prefer to load the model file?(Y/n):")
+        if load_model_flg.lower()=="y":
+            print("loading:",mfs[0])
+            model.load_weights(mfs[0])
         model.summary()
         optimizer=tf.keras.optimizers.Adam()
         loss_object=tf.keras.losses.categorical_crossentropy
