@@ -76,7 +76,12 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         if isGDrive:
             gdrive.transfer_dataset()
     return dataset
-def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None,s_t=0,time_limit=-1):
+def sub_create_dataset(
+    play_num,expand_rate,
+    p_num,Lock:local_locker,
+    model=None,baseline_model=None,
+    s_t=0,time_limit=-1
+    ):
     dataset=[[],[]]
     if model is None:
         isModel=False
@@ -84,13 +89,17 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None,s
         isModel=True
         mcts=MCTS(game_cond(),model)
         minimax=minimax_search()
+    if model is not None:
+        baseline_mcts=MCTS(game_cond(),baseline_model)
     tqdm_obj=tqdm(range(play_num),position=0,leave=False)
+    win_rate=[0,0,0]
     for _ in tqdm_obj:
         if (not time_limit<0) and time.time()-s_t>time_limit:
             break
         model_usage=[0,0]
         if isModel:
-            model_usage=[(_%4)//2,(_%4)%2]
+            model_usage=[(_%4)//2+1,(_%4)%2+1]
+        model_usage=[i if i==1 and baseline_model is not None else 0 for i in model_usage]
         cond=game_cond()
         data=[[],[]]
         end_flg=0
@@ -108,7 +117,12 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None,s
                 end_flg=0
                 if model_usage[cond.turn]==0:
                     next_move=random.choice(poss)
-                else:
+                elif model_usage[cond.turn]==1:
+                    if cond.board[0].sum()+cond.board[1].sum()>=56:
+                        _,next_move=minimax.get_move(cond)
+                    else:
+                        next_move=baseline_mcts.get_next_move(cond)[0]  
+                elif model_usage[cond.turn]==2:
                     if cond.board[0].sum()+cond.board[1].sum()>=56:
                         s,next_move=minimax.get_move(cond)
                     else:
@@ -119,6 +133,8 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None,s
                 end_flg+=1
             cond.flip_board()
         score=list(cond.get_score())
+        if model_usage[0]!=model_usage[1]:
+            win_rate[model_usage[np.argmax(score)]]+=1
         for i,s in enumerate(score):
             for d in data[i]:
                 board=d[0].repeat(expand_rate, axis=1).repeat(expand_rate, axis=2)
@@ -138,6 +154,7 @@ def sub_create_dataset(play_num,expand_rate,p_num,Lock:local_locker,model=None,s
     # print("softmax")
     # dataset[1]=sfmax(dataset[1])
     # print("Done")
+    print(win_rate)
     return dataset
 
 def sfmax(x):

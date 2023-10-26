@@ -12,3 +12,7 @@ client_secrets.json
 .vscode/settings.json
 .vscode/*
 .vscode/
+gcloud
+.gitignore
+setting2.yaml
+gcloud.pub

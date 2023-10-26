@@ -376,10 +376,11 @@ class minimax_search():
     
 from tqdm import tqdm_gui   
 class test_play():
-    def __init__(self,players=["Model","Random"],model=[None,None],game_count=100,isDebug=None):  
+    def __init__(self,players=["Model","Random"],model=[None,None],game_count=100,isDebug=None,Doshuffle=False):  
             self.minimax=minimax_search()
             self.isDebug=isDebug
             self.players=players
+            self.shuffle=Doshuffle
             for i,player in enumerate(self.players):
                 if player=="Model":
                     if model[i]==None:
@@ -390,6 +391,7 @@ class test_play():
                         model[i]=raw_load_model(model[i])
             self.mcts=[MCTS(game_cond(),model[i]) if self.players[i]=="Model" else None for i in range(2) ]            
             self.game_count=game_count
+            self.turn_append=0
             if self.isDebug is None:
                 if game_count==1:
                     self.isDebug=True
@@ -399,6 +401,9 @@ class test_play():
         win_count=[0,0]
         
         for _ in range(self.game_count):
+            if self.shuffle:
+                self.turn_append=random.randint(0,1)
+            print(f"Target model Player No.:{self.turn_append+1}")
             ab_s=[]
             try:
                 cond=game_cond()
@@ -426,7 +431,7 @@ class test_play():
                 raise KeyboardInterrupt()
             score=list(cond.get_score())
             win_side=np.argmax(score)
-            win_count[win_side]+=1
+            win_count[(win_side+self.turn_append)%2]+=1
             if win_side==1:
                 print("ab_s:",ab_s)
             print("win_count:",win_count)
@@ -440,7 +445,7 @@ class test_play():
                 ab_s.append(s)
                 if self.isDebug:print("s:",s)
             else:
-                next_move=self.mcts[cond.turn].get_next_move(cond)[0]
+                next_move=self.mcts[(cond.turn+self.turn_append)%2].get_next_move(cond)[0]
         elif player == "Random":
             if self.isDebug:print("Executing random")
             r=[1 for p in poss]
@@ -464,10 +469,15 @@ if __name__=="__main__":
     target_model=network.miniResNet((8,8,2),64)
     target_model(np.empty((1,8,8,2)))
     target_model.load_weights(f)
-    
+    print(f)
     if len(fs)>1:
         baseline_model=network.raw_load_model(fs[-2])
+        print(fs[-2])
         
-    tp=test_play(players=["Model","Model"],model=[target_model,baseline_model],game_count=1000)
+    tp=test_play(players=["Model","Model"],model=[target_model,baseline_model],game_count=20,Doshuffle=False)
     score=tp.loop_game()
-    print(score)
+    tp=test_play(players=["Model","Model"],model=[baseline_model,target_model],game_count=20,Doshuffle=False)
+    score2=tp.loop_game()
+    score2[0],score2[1]=score2[1],score2[0]
+    score=np.array(score)+np.array(score2)
+    print((score[0]*100)/score.sum(),"%")
