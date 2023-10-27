@@ -89,7 +89,7 @@ def sub_create_dataset(
         isModel=True
         mcts=MCTS(game_cond(),model)
         minimax=minimax_search()
-    if model is not None:
+    if baseline_model is not None:
         baseline_mcts=MCTS(game_cond(),baseline_model)
     tqdm_obj=tqdm(range(play_num),position=0,leave=False)
     win_rate=[0,0,0]
@@ -99,7 +99,8 @@ def sub_create_dataset(
         model_usage=[0,0]
         if isModel:
             model_usage=[(_%4)//2+1,(_%4)%2+1]
-        model_usage=[i if i==1 and baseline_model is not None else 0 for i in model_usage]
+        print(model_usage)
+        model_usage=[0 if i==1 and baseline_model is None else i for i in model_usage]
         cond=game_cond()
         data=[[],[]]
         end_flg=0
@@ -115,6 +116,7 @@ def sub_create_dataset(
                     poss.append(p)
             if len(poss)>0:
                 end_flg=0
+                print(model_usage[cond.turn])
                 if model_usage[cond.turn]==0:
                     next_move=random.choice(poss)
                 elif model_usage[cond.turn]==1:
