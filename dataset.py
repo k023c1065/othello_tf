@@ -30,6 +30,10 @@ def loadDataset():
                 dataset[1]=np.concatenate([dataset[1],data[1]])
         except pickle.PickleError:
             print(f"Failed to pickle file:{file}. Skipping")
+    if dataset is None:
+        raise FileNotFoundError("It seems all dataset file(s) have been corruppted\n",
+                                "Please Check a dataset folder for more info.",
+                                f"dataset_files:{dataset_files}")
     print("Done")
     return dataset
 def dataset2tensor(dataset,batch_size):

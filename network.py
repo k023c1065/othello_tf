@@ -258,11 +258,11 @@ class train_module():
                         self.train_loss.append(np.mean(np.array(loss)))
                         loss_array.append(np.mean(np.array(loss)))
                         t.set_description(f"loss:{np.round(float(np.mean(loss_array)),decimals=5)}")
-                        t.update()
                     else:
                         skip_count+=1
+                    t.update()
             print("skip_count:",skip_count,end="    ")
-            print("train loss:",float(np.mean(loss_array)),end="     ")
+            print("train loss:",float(np.mean(loss_array)),end="")
             loss_array=[]
             for images,labels in test_ds:
                 loss=self.test_step(images,labels)
@@ -285,6 +285,7 @@ class train_module():
                 print()
             self.save_fig()
             self.save_model()
+            self.save_train()
     def save_fig(self):
         train_loss=get_moving_ave(self.train_loss)
         plt.plot([i for i in range(len(self.train_loss))],train_loss,label="train")
@@ -299,6 +300,10 @@ class train_module():
         if ENV_COLAB:
             self.model.save_weights("./drive/MyDrive/model/"+model_file_name)
         print("model saved as ",model_file_name)
+    def save_train(self,path="./model/"):
+        self.model.save(path+"latest_model",overwrite=True,save_format="tf")
+        if ENV_COLAB:
+            self.model.save("./drive/MyDrive/model/latest_model")
     
 def get_linear_inc(x,y):
     lr = LinearRegression()
