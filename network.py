@@ -245,6 +245,8 @@ class train_module():
     def start_train(self,train_ds,test_ds,EPOCH=10,skip_rate=0.001):
         print("last train:",self.last_train)
         skip_rate_cap=1//skip_rate
+        best_test_loss=3.9 #Probably the baseline
+        
         for e in range(EPOCH):
             self.last_train=datetime.now()
             print("EPOCH:",e)
@@ -285,6 +287,8 @@ class train_module():
                 print()
             self.save_fig()
             self.save_model()
+            if self.test_loss[1][-1]<best_test_loss:
+                self.save_best_model()
             self.save_train()
     def save_fig(self):
         train_loss=get_moving_ave(self.train_loss)
@@ -300,6 +304,12 @@ class train_module():
         if ENV_COLAB:
             self.model.save_weights("./drive/MyDrive/model/"+model_file_name)
         print("model saved as ",model_file_name)
+    def save_best_model(self,model_path="./model/"):
+        model_file_name="best_model.h5"
+        self.model.save_weights(model_path+model_file_name)
+        if ENV_COLAB:
+            self.model.save_weights("./drive/MyDrive/model/"+model_file_name)
+        print("Best model has been updated")
     def save_train(self,path="./model/"):
         self.model.save(path+"latest_model",overwrite=True,save_format="tf")
         if ENV_COLAB:
