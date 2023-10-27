@@ -99,7 +99,6 @@ def sub_create_dataset(
         model_usage=[0,0]
         if isModel:
             model_usage=[(_%4)//2+1,(_%4)%2+1]
-        print(model_usage)
         model_usage=[0 if i==1 and baseline_model is None else i for i in model_usage]
         cond=game_cond()
         data=[[],[]]
@@ -116,7 +115,6 @@ def sub_create_dataset(
                     poss.append(p)
             if len(poss)>0:
                 end_flg=0
-                print(model_usage[cond.turn])
                 if model_usage[cond.turn]==0:
                     next_move=random.choice(poss)
                 elif model_usage[cond.turn]==1:
