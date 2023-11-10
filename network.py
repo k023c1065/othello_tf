@@ -8,7 +8,7 @@ import os
 from sklearn.linear_model import LinearRegression
 import tqdm as tq
 from datetime import datetime
-import sys
+import sys,time,threading
 import random
 moduleList = sys.modules
 ENV_COLAB = False
@@ -19,7 +19,7 @@ if 'google.colab' in moduleList:
 else:
     tqdm=tq.tqdm
     print("Not google_colab")
-def raw_load_model(file_name=None):
+def raw_load_model(file_name=None,needsName=False):
     model=miniResNet((8,8,2),64)
     model(np.empty((1,8,8,2)))
     try:
@@ -32,7 +32,8 @@ def raw_load_model(file_name=None):
        raise FileNotFoundError("failed to get Model file(s) \n",
                                f"Expected File:{model_file}"
                                f"targeted Files:{model_files}")
-        
+    if needsName:
+        return model,model_file
     return model
 class ConvModel(keras.Model):
     def __init__(self,inp_ch,out_ch):
@@ -315,6 +316,70 @@ class train_module():
         if ENV_COLAB:
             self.model.save("./drive/MyDrive/model/latest_model")
     
+
+lock=None
+
+    
+    
+class pipe_man():
+    def __init__(self,i,o):
+        self.inputs=i
+        self.outputs=o
+    def get_output(self,id):
+        pass
+class global_pred_module():
+    def __init__(self,model,max_size=16,inputspipe=None,outputspipe=None,lock=None):
+        self.model=model
+        self.inputs=[]
+        self.outputs=None
+        self.last_time=0
+        self.max_size=max_size
+        self.block_flg=False
+        self.workerflg=False
+        self.th=None
+        self.outputs_pipe=outputspipe
+        self.inputs_pipe=inputspipe
+        self.locker=lock
+    def add_input(self,inp):
+        while self.block_flg:
+            pass
+        self.inputs.append(inp)
+        self.last_time=time.time()
+        return len(self.inputs)-1
+    def _execute(self):
+        self.block_flg=True
+        print("Start exectuion")
+        with self.locker:
+            print("Earned locker")
+            for inp in self.inputs_pipe:
+                self.inputs.append(inp)
+            self.inputs_pipe[:]=[]
+            self.outputs=self.model(np.array(self.inputs))
+            for i,data in enumerate(self.outputs):
+                self.outputs_pipe[i]=data
+            self.outputs_pipe[-1]=True
+        self.block_flg=False
+    def worker(self):
+        print("Starting worker func")
+        while self.workerflg:
+            while self.workerflg and \
+            (time.time()-self.last_time<=3 or len(self.inputs_pipe)<1) and \
+                len(self.inputs_pipe)<self.max_size :
+                pass
+            self._execute()
+            self.last_time=time.time()
+        print("Ending worker func")
+    def start_worker(self):
+        print("Starting worker thread")
+        if not self.workerflg:
+            self.workerflg=True
+            self.th=threading.Thread(target=self.worker)
+            self.th.start()
+    def stop_worker(self):
+        self.workerflg=False
+        self.th.join()
+    def get_output(self,id):
+        return self.outputs[id]
 def get_linear_inc(x,y):
     lr = LinearRegression()
     lr.fit(np.array(x).reshape(-1,1), np.array(y).reshape(-1,1))

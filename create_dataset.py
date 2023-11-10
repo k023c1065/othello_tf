@@ -25,8 +25,10 @@ class local_locker():
     def release_lock(self,id,time_out=0.1):
         if self.lock==id:
             self.lock=0
+predict_module=None
 def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False,isGDrive=False,time_limit=-1):
     IS_MULTI=True
+    global predict_module
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
     if proc_num==1 and not ForceUseMulti:
@@ -39,24 +41,40 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
     else:
         gdrive=None
     s_t=time.time()
-    while (isGDrive or i==0) and (time_limit<0 or time.time()-s_t<=time_limit):
+    fname=None
+    multi_man=multiprocessing.Manager()
+    gpm_inputs=multi_man.list()
+    gpm_outputs=multi_man.dict()
+    gpm_outputs[-1]=False
+    locker=multiprocessing.Lock()
+    baseline_model=None
+    while (isGDrive or i==0) and \
+    (time_limit<0 or time.time()-s_t<=time_limit):
+        refreshflg=False
         if isModel:
-            model=network.raw_load_model()
+            model,tmp_f=network.raw_load_model(needsName=True)
+            if fname is None or fname != tmp_f:
+                refreshflg=True
+                mcts=MCTS(game_cond(),model)
+                predict_module=network.global_pred_module(model,max_size=32,inputspipe=gpm_inputs,outputspipe=gpm_outputs,lock=locker)
+                
+            fname=tmp_f
             if IS_MULTI and len(tf.config.list_physical_devices('GPU'))<1 and not ForceUseMulti:
                 print("Multi processing feature will be ignored")
                 # Neural network will use full cpu cores 
                 # and multiprocessing will be bad in this situation
                 IS_MULTI=False 
+            predict_module.start_worker()
         else:
-            model=None
+            model=None    
+            
         i+=1
         dataset=[[],[]]
         if IS_MULTI:
             multiprocessing.freeze_support()
-            Lock=local_locker()
-            with multiprocessing.Pool(proc_num) as p:
+            with multiprocessing.Pool(proc_num,initializer=global_pred_initer,initargs=(locker,)) as p:
                 pool_result=p.starmap(sub_create_dataset,
-                                      [(play_num//proc_num,expand_rate,p_num+1,Lock,model) for p_num in range(proc_num)],
+                                      [(play_num//proc_num,expand_rate,p_num+1,model,baseline_model,s_t,-1,mcts,gpm_inputs,gpm_outputs) for p_num in range(proc_num)],
                                       )
             for r in pool_result:
                 if len(dataset[0])<1:
@@ -66,7 +84,7 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
                     dataset[0]=dataset[0]+r[0]
                     dataset[1]=np.concatenate([dataset[1], r[1]])
         else:
-            dataset=sub_create_dataset(play_num,expand_rate,None,None,model)
+            dataset=sub_create_dataset(play_num,expand_rate,None,None,model,mcts)
         dataset[1]=np.array(dataset[1],dtype="float32")
         dataset=[np.array(np.transpose(dataset[0],[0,2,3,1]),dtype=bool),dataset[1]]
         print(dataset[0].shape,dataset[1].shape)
@@ -76,18 +94,30 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         if isGDrive:
             gdrive.transfer_dataset()
     return dataset
+lock=None
+def global_pred_initer(lock_param):
+    global lock
+    print("before:",lock)
+    lock=lock_param
+    print("after:",lock)
 def sub_create_dataset(
     play_num,expand_rate,
-    p_num,Lock:local_locker,
+    p_num,
     model=None,baseline_model=None,
-    s_t=0,time_limit=-1
+    s_t=0,time_limit=-1,
+    mcts=None,
+    inputs_pipe=None,outputs_pipe=None
     ):
+    global predict_module,lock
+    pmodule=predict_module
+    print(pmodule)
     dataset=[[],[]]
     if model is None:
         isModel=False
     else:
         isModel=True
-        mcts=MCTS(game_cond(),model)
+        if mcts is None:
+            mcts=MCTS(game_cond(),model)
         minimax=minimax_search()
     if baseline_model is not None:
         baseline_mcts=MCTS(game_cond(),baseline_model)
@@ -121,12 +151,12 @@ def sub_create_dataset(
                     if cond.board[0].sum()+cond.board[1].sum()>=56:
                         _,next_move=minimax.get_move(cond)
                     else:
-                        next_move=baseline_mcts.get_next_move(cond)[0]  
+                        next_move=baseline_mcts.get_next_move(cond,lock,inputs_pipe,outputs_pipe)[0]  
                 elif model_usage[cond.turn]==2:
                     if cond.board[0].sum()+cond.board[1].sum()>=56:
                         s,next_move=minimax.get_move(cond)
                     else:
-                        next_move=mcts.get_next_move(cond)[0]
+                        next_move=mcts.get_next_move(cond,lock,inputs_pipe,outputs_pipe)[0]
                 data[cond.turn].append([cond.board,next_move,poss])
                 cond.move(next_move[0],next_move[1])
             else:
@@ -177,7 +207,7 @@ if __name__=="__main__":
     gflg=parser.gdrive
     time_limit=parser.time
     if not transflg:
-        main(proc_num,play_num,isModel=mflg,isGDrive=gflg,time_limit=time_limit)
+        main(proc_num,play_num,isModel=mflg,isGDrive=gflg,time_limit=time_limit,ForceUseMulti=True)
     else:
         gdrive=gdrive_dataset()
         gdrive.get_dataset()
