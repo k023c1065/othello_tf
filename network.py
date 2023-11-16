@@ -328,7 +328,7 @@ class pipe_man():
     def get_output(self,id):
         pass
 class global_pred_module():
-    def __init__(self,model,max_size=16,inputspipe=None,outputspipe=None,lock=None):
+    def __init__(self,model,max_size=256,inputspipe=None,outputspipe=None,lock=None):
         self.model=model
         self.inputs=[]
         self.outputs=None
@@ -348,13 +348,15 @@ class global_pred_module():
         return len(self.inputs)-1
     def _execute(self):
         self.block_flg=True
-        print("Start exectuion")
+        #print("Start exectuion")
         with self.locker:
-            print("Earned locker")
+            #print("Earned locker")
             for inp in self.inputs_pipe:
                 self.inputs.append(inp)
             self.inputs_pipe[:]=[]
-            self.outputs=self.model(np.array(self.inputs))
+            self.outputs=np.array(self.model(np.array(self.inputs)))
+            #print(f"{len(np.array(self.inputs))} input(s) got executed.")
+            self.outputs=self.outputs.reshape((self.outputs.shape[0],8,8))
             for i,data in enumerate(self.outputs):
                 self.outputs_pipe[i]=data
             self.outputs_pipe[-1]=True

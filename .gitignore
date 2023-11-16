@@ -9,12 +9,11 @@
 /model
 client_secrets.json
 /setting.yaml
-.vscode/settings.json
 .vscode/*
 .vscode/
 gcloud
 .gitignore
 setting2.yaml
 gcloud.pub
-search/__pycache__/ab.cpython-39.pyc
-search/__pycache__/mcts.cpython-39.pyc
+search/__pycache__/*
+search/__pycache__/

@@ -55,22 +55,28 @@ class MCTS():
             else:
                 try:
                     with locker:
-                        print("Sending Data...",end="")
+                        p#rint("Sending Data...",end="")
                         ipipe.append(np.transpose(cond.board,[1,2,0]))
                         id=len(ipipe)-1
-                        print("Done")
+                        #print("Done")
                 except AttributeError:
                     print("\n"*30,"locker:",locker)
                     input("Waiting....")
                     raise AttributeError()
-                print("Getting data...",end="")
+                #print("Getting data...",end="")
                 while (not opipe[-1]) or (not id in opipe.keys()) :
                     pass
-                print(opipe.items())
-                r=opipe[id]
+                #print(opipe.items())
+                #print(id)
+                r=(opipe[id])
                 try:
-                    assert(type(r) is np.ndarray and r.shape=(1,8,8))
-                print("Done")
+                    assert(type(r) is np.ndarray and r.shape==(8,8))
+                except AssertionError:
+                    print(type(r))
+                    if type(r) is np.ndarray:
+                        print(r.shape)
+                    raise AssertionError(type(r),[r.shape if type(r) is np.ndarray else None])
+                #print("Done")
                 self.q_board_dict[cond.hash()]=r
             for p in poss:
                 q=r[p[0]][p[1]]
@@ -81,7 +87,6 @@ class MCTS():
             for qc in qc_score:
                 if qc[0]==0:
                     qc[0]=self.qdict[qc[1]]
-            
             # Evaluate C score
             for qc in qc_score:
                 N=self.play_count[qc[1]]

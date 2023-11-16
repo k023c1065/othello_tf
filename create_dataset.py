@@ -29,7 +29,7 @@ predict_module=None
 def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False,isGDrive=False,time_limit=-1):
     IS_MULTI=True
     global predict_module
-    if proc_num is None:
+    if proc_num is None or proc_num<1:
         proc_num=multiprocessing.cpu_count()
     if proc_num==1 and not ForceUseMulti:
         IS_MULTI=False
