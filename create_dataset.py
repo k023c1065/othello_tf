@@ -9,7 +9,7 @@ from tqdm import tqdm
 import multiprocessing
 import tensorflow as tf
 import datetime
-import sys
+import numpy as np
 class local_locker():
     def __init__(self):
         self.lock=False
@@ -80,17 +80,20 @@ def sub_create_dataset(
     play_num,expand_rate,
     p_num,Lock:local_locker,
     model=None,baseline_model=None,
-    s_t=0,time_limit=-1
+    s_t=0,time_limit=-1,
+    mcts_flg=True
     ):
     dataset=[[],[]]
     if model is None:
         isModel=False
     else:
         isModel=True
-        mcts=MCTS(game_cond(),model)
+        if mcts_flg:
+            mcts=MCTS(game_cond(),model)
         minimax=minimax_search()
     if baseline_model is not None:
-        baseline_mcts=MCTS(game_cond(),baseline_model)
+        if mcts_flg:
+            baseline_mcts=MCTS(game_cond(),baseline_model)
     tqdm_obj=tqdm(range(play_num),position=0,leave=False)
     win_rate=[0,0,0]
     for _ in tqdm_obj:
@@ -121,12 +124,20 @@ def sub_create_dataset(
                     if cond.board[0].sum()+cond.board[1].sum()>=56:
                         _,next_move=minimax.get_move(cond)
                     else:
-                        next_move=baseline_mcts.get_next_move(cond)[0]  
+                        if mcts_flg:
+                            next_move=baseline_mcts.get_next_move(cond)[0]  
+                        else:
+                            
+                            next_move=simple_model_search(cond,baseline_model)
+                            
                 elif model_usage[cond.turn]==2:
                     if cond.board[0].sum()+cond.board[1].sum()>=56:
                         s,next_move=minimax.get_move(cond)
                     else:
-                        next_move=mcts.get_next_move(cond)[0]
+                        if mcts_flg:
+                            next_move=mcts.get_next_move(cond)[0]
+                        else:
+                            next_move=simple_model_search(cond,baseline_model)
                 data[cond.turn].append([cond.board,next_move,poss])
                 cond.move(next_move[0],next_move[1])
             else:
@@ -169,6 +180,7 @@ if __name__=="__main__":
     parser.add_argument("--transflg","-gt",default=False,action="store_true")
     parser.add_argument("--gdrive","-g",default=False,action="store_true")
     parser.add_argument("--time","-t",type=int,default=-1)
+    parser.add_argument("--mcts",default=True,action="store_true")
     parser=parser.parse_args()
     proc_num=parser.pnum
     play_num=parser.num
@@ -176,8 +188,12 @@ if __name__=="__main__":
     mflg=parser.model
     gflg=parser.gdrive
     time_limit=parser.time
+    mcts_flg=parser.mcts
     if not transflg:
-        main(proc_num,play_num,isModel=mflg,isGDrive=gflg,time_limit=time_limit)
+        main(proc_num,play_num,
+             isModel=mflg,isGDrive=gflg,
+             time_limit=time_limit,ForceUseMulti=True,
+             mcts_flg=mcts_flg)
     else:
         gdrive=gdrive_dataset()
         gdrive.get_dataset()
