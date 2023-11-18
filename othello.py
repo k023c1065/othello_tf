@@ -380,8 +380,8 @@ def simple_model_search(cond:game_cond,model):
     for i in range(8):
         for j in range(8):
             if cond.is_movable(i,j):
-                moves.append(i,j)
-    r=model(np.transpose(cond.board,[1,2,0])[np.newaxis])[0]
+                moves.append([i,j])
+    r=np.array(model(np.transpose(cond.board,[1,2,0])[np.newaxis]))[0].reshape((8,8))
     s=-1e9
     best_move=[-1,-1]
     for m in moves:

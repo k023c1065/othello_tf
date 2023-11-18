@@ -1,4 +1,3 @@
-from math import e
 from othello import *
 import random
 from dataset import *
@@ -25,7 +24,7 @@ class local_locker():
     def release_lock(self,id,time_out=0.1):
         if self.lock==id:
             self.lock=0
-def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False,isGDrive=False,time_limit=-1):
+def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False,isGDrive=False,time_limit=-1,mcts_flg=True):
     IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
@@ -56,7 +55,7 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
             Lock=local_locker()
             with multiprocessing.Pool(proc_num) as p:
                 pool_result=p.starmap(sub_create_dataset,
-                                      [(play_num//proc_num,expand_rate,p_num+1,Lock,model) for p_num in range(proc_num)],
+                                      [(play_num//proc_num,expand_rate,p_num+1,Lock,model,None,0,-1,mcts_flg) for p_num in range(proc_num)],
                                       )
             for r in pool_result:
                 if len(dataset[0])<1:
@@ -83,6 +82,7 @@ def sub_create_dataset(
     s_t=0,time_limit=-1,
     mcts_flg=True
     ):
+    print("bm:",baseline_model)
     dataset=[[],[]]
     if model is None:
         isModel=False
@@ -102,69 +102,71 @@ def sub_create_dataset(
         model_usage=[0,0]
         if isModel:
             model_usage=[(_%4)//2+1,(_%4)%2+1]
-        model_usage=[0 if i==1 and baseline_model is None else i for i in model_usage]
-        cond=game_cond()
-        data=[[],[]]
-        end_flg=0
-        s_t=time.time()
-        while not(cond.isEnd() or end_flg>=2):
-            if time.time()-s_t>10 and not isModel:
-                cond.show()
-                print(cond.isEnd(),end_flg<2)
-                raise TimeoutError("Took too much time to finish the round")
-            poss=[]
-            for p in cond.placable:
-                if cond.is_movable(p[0],p[1]):
-                    poss.append(p)
-            if len(poss)>0:
-                end_flg=0
-                if model_usage[cond.turn]==0:
-                    next_move=random.choice(poss)
-                elif model_usage[cond.turn]==1:
-                    if cond.board[0].sum()+cond.board[1].sum()>=56:
-                        _,next_move=minimax.get_move(cond)
-                    else:
-                        if mcts_flg:
-                            next_move=baseline_mcts.get_next_move(cond)[0]  
+        if not ((model_usage[0]==0 and model_usage[0]==0) or (model_usage[0]==1 and model_usage==1 and mcts_flg==False)):
+            model_usage=[0 if i==1 and baseline_model is None else i for i in model_usage]
+            cond=game_cond()
+            data=[[],[]]
+            end_flg=0
+            s_t=time.time()
+            while not(cond.isEnd() or end_flg>=2):
+                tqdm_obj.set_description(f"{np.sum(cond.board[0]+cond.board[1])}/64")
+                if time.time()-s_t>10 and not isModel:
+                    cond.show()
+                    print(cond.isEnd(),end_flg<2)
+                    raise TimeoutError("Took too much time to finish the round")
+                poss=[]
+                for p in cond.placable:
+                    if cond.is_movable(p[0],p[1]):
+                        poss.append(p)
+                if len(poss)>0:
+                    end_flg=0
+                    if model_usage[cond.turn]==0:
+                        next_move=random.choice(poss)
+                    elif model_usage[cond.turn]==1:
+                        if cond.board[0].sum()+cond.board[1].sum()>=56:
+                            _,next_move=minimax.get_move(cond)
                         else:
-                            
-                            next_move=simple_model_search(cond,baseline_model)
-                            
-                elif model_usage[cond.turn]==2:
-                    if cond.board[0].sum()+cond.board[1].sum()>=56:
-                        s,next_move=minimax.get_move(cond)
-                    else:
-                        if mcts_flg:
-                            next_move=mcts.get_next_move(cond)[0]
+                            if mcts_flg:
+                                next_move=baseline_mcts.get_next_move(cond)[0]  
+                            else:
+                                
+                                next_move=simple_model_search(cond,baseline_model)
+                                
+                    elif model_usage[cond.turn]==2:
+                        if cond.board[0].sum()+cond.board[1].sum()>=56:
+                            s,next_move=minimax.get_move(cond)
                         else:
-                            next_move=simple_model_search(cond,baseline_model)
-                data[cond.turn].append([cond.board,next_move,poss])
-                cond.move(next_move[0],next_move[1])
-            else:
-                end_flg+=1
-            cond.flip_board()
-        score=list(cond.get_score())
-        if model_usage[0]!=model_usage[1]:
-            win_rate[model_usage[np.argmax(score)]]+=1
-        for i,s in enumerate(score):
-            for d in data[i]:
-                board=d[0].repeat(expand_rate, axis=1).repeat(expand_rate, axis=2)
-                dataset[0].append(np.array(board,dtype=bool))
-                a=np.zeros((8,8))
-                for p in d[2]:
-                    if p==d[1]:
-                        a[d[1][0]][d[1][1]]=score[i]/sum(score)
-                    else:
-                        a[p[0]][p[1]]=1-score[i]/sum(score)
-                a/=max(0.001,a.reshape(64).sum())
-                dataset[1].append(a.reshape(64))
-        # if Lock.get_lock(p_num,time_out=-1):
-        #     tqdm_obj.update(1)
-        #     Lock.release_lock(p_num)
+                            if mcts_flg:
+                                next_move=mcts.get_next_move(cond)[0]
+                            else:
+                                next_move=simple_model_search(cond,model)
+                    data[cond.turn].append([cond.board,next_move,poss])
+                    cond.move(next_move[0],next_move[1])
+                else:
+                    end_flg+=1
+                cond.flip_board()
+            score=list(cond.get_score())
+            if model_usage[0]!=model_usage[1]:
+                win_rate[model_usage[np.argmax(score)]]+=1
+            if model_usage[0]==model_usage[1] or score[model_usage.index(0)]==1:
+                for i,s in enumerate(score):
+                    for d in data[i]:
+                        board=d[0]
+                        if expand_rate!=1:
+                            board=board.repeat(expand_rate, axis=1).repeat(expand_rate, axis=2)
+                        dataset[0].append(board.astype(bool))
+                        a=np.zeros((8,8))
+                        for p in d[2]:
+                            if p==d[1]:
+                                a[d[1][0]][d[1][1]]=score[i]/sum(score)
+                            else:
+                                a[p[0]][p[1]]=1-score[i]/sum(score)
+                        a/=max(0.001,a.reshape(64).sum())
+                        dataset[1].append(a.reshape(64))
+            # if Lock.get_lock(p_num,time_out=-1):
+            #     tqdm_obj.update(1)
+            #     Lock.release_lock(p_num)
     tqdm_obj.close()
-    # print("softmax")
-    # dataset[1]=sfmax(dataset[1])
-    # print("Done")
     print(win_rate)
     return dataset
 
@@ -180,7 +182,7 @@ if __name__=="__main__":
     parser.add_argument("--transflg","-gt",default=False,action="store_true")
     parser.add_argument("--gdrive","-g",default=False,action="store_true")
     parser.add_argument("--time","-t",type=int,default=-1)
-    parser.add_argument("--mcts",default=True,action="store_true")
+    parser.add_argument("--mcts",default=True,action="store_false")
     parser=parser.parse_args()
     proc_num=parser.pnum
     play_num=parser.num
@@ -189,6 +191,7 @@ if __name__=="__main__":
     gflg=parser.gdrive
     time_limit=parser.time
     mcts_flg=parser.mcts
+    print(mcts_flg)
     if not transflg:
         main(proc_num,play_num,
              isModel=mflg,isGDrive=gflg,
