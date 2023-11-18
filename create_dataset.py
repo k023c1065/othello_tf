@@ -9,6 +9,8 @@ import multiprocessing
 import tensorflow as tf
 import datetime
 import numpy as np
+
+btqdm_flg=False
 class local_locker():
     def __init__(self):
         self.lock=False
@@ -83,6 +85,7 @@ def sub_create_dataset(
     mcts_flg=True
     ):
     print("bm:",baseline_model)
+    global btqdm_flg
     dataset=[[],[]]
     if model is None:
         isModel=False
@@ -94,7 +97,7 @@ def sub_create_dataset(
     if baseline_model is not None:
         if mcts_flg:
             baseline_mcts=MCTS(game_cond(),baseline_model)
-    tqdm_obj=tqdm(range(play_num),position=0,leave=False)
+    tqdm_obj=tqdm(range(play_num),position=0,leave=False,dynamic_ncols=btqdm_flg)
     win_rate=[0,0,0]
     for _ in tqdm_obj:
         if (not time_limit<0) and time.time()-s_t>time_limit:
@@ -183,6 +186,7 @@ if __name__=="__main__":
     parser.add_argument("--gdrive","-g",default=False,action="store_true")
     parser.add_argument("--time","-t",type=int,default=-1)
     parser.add_argument("--mcts",default=True,action="store_false")
+    parser.add_argument("--btqdm",action="store_false")
     parser=parser.parse_args()
     proc_num=parser.pnum
     play_num=parser.num
@@ -191,6 +195,7 @@ if __name__=="__main__":
     gflg=parser.gdrive
     time_limit=parser.time
     mcts_flg=parser.mcts
+    btqdm_flg=parser.btqdm
     print(mcts_flg)
     if not transflg:
         main(proc_num,play_num,
