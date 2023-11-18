@@ -196,11 +196,12 @@ if __name__=="__main__":
     time_limit=parser.time
     mcts_flg=parser.mcts
     btqdm_flg=parser.btqdm
+    fum=proc_num>1
     print(mcts_flg)
     if not transflg:
         main(proc_num,play_num,
              isModel=mflg,isGDrive=gflg,
-             time_limit=time_limit,ForceUseMulti=True,
+             time_limit=time_limit,ForceUseMulti=False,
              mcts_flg=mcts_flg)
     else:
         gdrive=gdrive_dataset()
