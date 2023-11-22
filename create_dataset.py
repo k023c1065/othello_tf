@@ -192,7 +192,7 @@ if __name__=="__main__":
     if not transflg:
         main(proc_num,play_num,
              isModel=mflg,isGDrive=gflg,
-             time_limit=time_limit,ForceUseMulti=False,
+             time_limit=time_limit,ForceUseMulti=fum,
              mcts_flg=mcts_flg)
     else:
         gdrive=gdrive_dataset()
