@@ -19,7 +19,7 @@ if 'google.colab' in moduleList:
 else:
     tqdm=tq.tqdm
     print("Not google_colab")
-def raw_load_model(file_name=None):
+def raw_load_model(file_name=None,get_filename=False):
     model=miniResNet((8,8,2),64)
     model(np.empty((1,8,8,2)))
     try:
@@ -32,7 +32,8 @@ def raw_load_model(file_name=None):
        raise FileNotFoundError("failed to get Model file(s) \n",
                                f"Expected File:{model_file}"
                                f"targeted Files:{model_files}")
-        
+    if get_filename:
+        return model,model_file  
     return model
 class ConvModel(keras.Model):
     def __init__(self,inp_ch,out_ch):

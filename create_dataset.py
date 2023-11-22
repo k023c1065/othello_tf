@@ -7,26 +7,14 @@ import time
 from tqdm import tqdm
 import multiprocessing
 import tensorflow as tf
-import datetime
+import datetime,os
 import numpy as np
 
 btqdm_flg=False
-class local_locker():
-    def __init__(self):
-        self.lock=False
-    def get_lock(self,id,time_out=0.1):
-        s_t=time.time()
-        while self.lock!=0 and (time_out<0 or time.time()-s_t<=time_out):
-            pass
-        if self.lock==0:
-            self.lock=id
-            return True
-        else:
-            return False
-    def release_lock(self,id,time_out=0.1):
-        if self.lock==id:
-            self.lock=0
-def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,ForceUseMulti=False,isGDrive=False,time_limit=-1,mcts_flg=True):
+def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=False,
+         ForceUseMulti=False,
+         isGDrive=False,
+         time_limit=-1,mcts_flg=True):
     IS_MULTI=True
     if proc_num is None:
         proc_num=multiprocessing.cpu_count()
@@ -40,9 +28,13 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
     else:
         gdrive=None
     s_t=time.time()
+    last_fn=None
     while (isGDrive or i==0) and (time_limit<0 or time.time()-s_t<=time_limit):
         if isModel:
-            model=network.raw_load_model()
+            model,fn=network.raw_load_model(get_filename=True)
+            if last_fn is None or fn != last_fn:
+                last_fn=fn
+                SMSearch=simple_model_search(model)
             if IS_MULTI and len(tf.config.list_physical_devices('GPU'))<1 and not ForceUseMulti:
                 print("Multi processing feature will be ignored")
                 # Neural network will use full cpu cores 
@@ -54,10 +46,10 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         dataset=[[],[]]
         if IS_MULTI:
             multiprocessing.freeze_support()
-            Lock=local_locker()
+            Lock=None
             with multiprocessing.Pool(proc_num) as p:
                 pool_result=p.starmap(sub_create_dataset,
-                                      [(play_num//proc_num,expand_rate,p_num+1,Lock,model,None,0,-1,mcts_flg) for p_num in range(proc_num)],
+                                      [(play_num//proc_num,expand_rate,p_num+1,Lock,model,None,0,-1,mcts_flg,SMSearch) for p_num in range(proc_num)],
                                       )
             for r in pool_result:
                 if len(dataset[0])<1:
@@ -79,10 +71,10 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
     return dataset
 def sub_create_dataset(
     play_num,expand_rate,
-    p_num,Lock:local_locker,
+    p_num,Lock,
     model=None,baseline_model=None,
     s_t=0,time_limit=-1,
-    mcts_flg=True
+    mcts_flg=True,sms=None
     ):
     print("bm:",baseline_model)
     global btqdm_flg
@@ -132,9 +124,7 @@ def sub_create_dataset(
                             if mcts_flg:
                                 next_move=baseline_mcts.get_next_move(cond)[0]  
                             else:
-                                
-                                next_move=simple_model_search(cond,baseline_model)
-                                
+                                next_move=sms.search(cond)
                     elif model_usage[cond.turn]==2:
                         if cond.board[0].sum()+cond.board[1].sum()>=56:
                             s,next_move=minimax.get_move(cond)
@@ -142,7 +132,7 @@ def sub_create_dataset(
                             if mcts_flg:
                                 next_move=mcts.get_next_move(cond)[0]
                             else:
-                                next_move=simple_model_search(cond,model)
+                                next_move=sms.search(cond)
                     data[cond.turn].append([cond.board,next_move,poss])
                     cond.move(next_move[0],next_move[1])
                 else:
@@ -197,6 +187,7 @@ if __name__=="__main__":
     mcts_flg=parser.mcts
     btqdm_flg=parser.btqdm
     fum=proc_num>1
+    os.chdir(os.path.dirname(__file__))
     print(mcts_flg)
     if not transflg:
         main(proc_num,play_num,

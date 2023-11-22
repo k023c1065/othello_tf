@@ -374,21 +374,27 @@ class minimax_search():
         self.cache[board.hash()]=(best_score,best_move)
         return best_score,best_move
     
-
-def simple_model_search(cond:game_cond,model):
-    moves=[]
-    for i in range(8):
-        for j in range(8):
-            if cond.is_movable(i,j):
-                moves.append([i,j])
-    r=np.array(model(np.transpose(cond.board,[1,2,0])[np.newaxis]))[0].reshape((8,8))
-    s=-1e9
-    best_move=[-1,-1]
-    for m in moves:
-        if r[m[0]][m[1]]>s:
-            best_move=m
-            s=r[m[0]][m[1]]
-    return best_move
+class simple_model_search():
+    def __init__(self,model):
+        self.model=model
+        self.model_cache=dict()
+    def search(self,cond):
+        moves=[]
+        if cond.hash() in self.model_cache:
+            return self.model_cache[cond.hash()]
+        for i in range(8):
+            for j in range(8):
+                if cond.is_movable(i,j):
+                    moves.append([i,j])
+        r=np.array(self.model(np.transpose(cond.board,[1,2,0])[np.newaxis]))[0].reshape((8,8))
+        s=-1e9
+        best_move=[-1,-1]
+        for m in moves:
+            if r[m[0]][m[1]]>s:
+                best_move=m
+                s=r[m[0]][m[1]]
+        self.model_cache[cond.hash()]=best_move
+        return best_move
 from tqdm import tqdm_gui   
 class test_play():
     def __init__(self,players=["Model","Random"],model=[None,None],game_count=100,isDebug=None,Doshuffle=False):  
