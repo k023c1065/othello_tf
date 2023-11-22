@@ -46,10 +46,14 @@ def main(proc_num=None,play_num=8192,expand_rate=1,sub_play_count=1024,isModel=F
         dataset=[[],[]]
         if IS_MULTI:
             multiprocessing.freeze_support()
-            Lock=None
+            Man=multiprocessing.Manager()
+            Lock=Man.Lock()
+            end_num=Man.Value(int,0)
+            end_num.value=0
             with multiprocessing.Pool(proc_num) as p:
                 pool_result=p.starmap(sub_create_dataset,
-                                      [(play_num//proc_num,expand_rate,p_num+1,Lock,model,None,0,-1,mcts_flg,SMSearch) for p_num in range(proc_num)],
+                                      [(play_num//proc_num,expand_rate,p_num+1,Lock,model,
+                                        None,0,-1,mcts_flg,SMSearch,end_num,proc_num) for p_num in range(proc_num)],
                                       )
             for r in pool_result:
                 if len(dataset[0])<1:
@@ -74,7 +78,8 @@ def sub_create_dataset(
     p_num,Lock,
     model=None,baseline_model=None,
     s_t=0,time_limit=-1,
-    mcts_flg=True,sms=None
+    mcts_flg=True,sms=None,
+    end_num=None,pnum=1
     ):
     print("bm:",baseline_model)
     global btqdm_flg
@@ -89,9 +94,9 @@ def sub_create_dataset(
     if baseline_model is not None:
         if mcts_flg:
             baseline_mcts=MCTS(game_cond(),baseline_model)
-    tqdm_obj=tqdm(range(play_num),position=0,leave=False,dynamic_ncols=btqdm_flg)
+    tqdm_obj=tqdm(range(play_num*pnum),position=0,leave=False,dynamic_ncols=btqdm_flg)
     win_rate=[0,0,0]
-    for _ in tqdm_obj:
+    for _ in range(play_num):
         if (not time_limit<0) and time.time()-s_t>time_limit:
             break
         model_usage=[0,0]
@@ -104,7 +109,7 @@ def sub_create_dataset(
             end_flg=0
             s_t=time.time()
             while not(cond.isEnd() or end_flg>=2):
-                tqdm_obj.set_description(f"{np.sum(cond.board[0]+cond.board[1])}/64")
+                #tqdm_obj.set_description(f"{np.sum(cond.board[0]+cond.board[1])}/64")
                 if time.time()-s_t>10 and not isModel:
                     cond.show()
                     print(cond.isEnd(),end_flg<2)
@@ -159,7 +164,11 @@ def sub_create_dataset(
             # if Lock.get_lock(p_num,time_out=-1):
             #     tqdm_obj.update(1)
             #     Lock.release_lock(p_num)
-    tqdm_obj.close()
+            with Lock:
+                end_num.value+=1
+
+                tqdm_obj.update(end_num.value-tqdm_obj.n)
+                tqdm_obj.display()
     print(win_rate)
     return dataset
 
