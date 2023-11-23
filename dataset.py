@@ -1,3 +1,4 @@
+from concurrent.futures import thread
 import numpy as np
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
@@ -5,7 +6,7 @@ from glob import glob
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
-import random,pickle,math,os
+import random,pickle,math,os,threading
 
 def move2board(move,turn):
     a=np.zeros((8,8))
@@ -91,5 +92,33 @@ class gdrive_dataset():
         for f in files:
             print("Downloading:",f["title"])
             f.GetContentFile("./dataset/"+f["title"])
+    
+    def get_dataset_thread(self,thread_num=4):
+        query=f'"{self.FOLDER_ID}" in parents'
+        files = self.drive.ListFile({'q':query}).GetList()
+        files = np.split(files,thread_num)
+        th_array=[]
+        for file in files:
+            th_array.append(threading.Thread(target=self._file_getter,args=(file,)))
+        for th in th_array:
+            th.start()
+        for th in th_array:
+            th.join()
+    def _files_getter(self,files):
+        for f in files:
+            print("Downloading:",f["title"])
+            Download_flg=False
+            Fail_count=0
+            while (not Download_flg) and Fail_count<10:
+                try:
+                    f.GetContentFile("./dataset/"+f["title"])
+                except Exception:
+                    Fail_count+=1
+                else:
+                    Download_flg=True
+            if Fail_count>=10:
+                print("Downlaod failed:",f["title"])
+            else:
+                print("Downlaod success:",f["title"])
 
 
