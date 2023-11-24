@@ -2,7 +2,8 @@ import logging
 import datetime
 from multiprocessing import Lock
 class mylog:
-    logging.basicConfig(filename=f"log/{str(datetime.datetime.now())}.log",
+    filename=f"log/{str(datetime.datetime.now())}.log".replace(" ","").replace(":","_")
+    logging.basicConfig(,filename=filename
                         format='%(asctime)s %(message)s')
     log_level=[]
     lock=Lock()
