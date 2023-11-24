@@ -319,6 +319,7 @@ class train_module():
             self.save_fig()
             self.save_model()
             if self.test_loss[1][-1] < best_test_loss:
+                best_test_loss=self.test_loss[1][-1]
                 self.save_best_model()
             self.save_train()
 
