@@ -53,9 +53,9 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
             Lock = multiprocessing.Lock()
             end_num = multiprocessing.Value(ctypes.c_int, 0)
             end_num.value = 0
-            with multiprocessing.Pool(proc_num) as p:
+            with multiprocessing.Pool(proc_num,initializer=scd_initer,initargs=(Lock,)) as p:
                 pool_result = p.starmap(sub_create_dataset,
-                                        [(play_num//proc_num, expand_rate, p_num+1, Lock, model,
+                                        [(play_num//proc_num, expand_rate, p_num+1, model,
                                           None, 0, -1, mcts_flg, SMSearch, end_num, proc_num)\
                                          for p_num in range(proc_num)],
                                         )
@@ -80,11 +80,14 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
         if isGDrive:
             gdrive.transfer_dataset()
     return dataset
-
+Lock=None
+def scd_initer(lock):
+    global Lock
+    Lock=lock
 
 def sub_create_dataset(
     play_num, expand_rate,
-    p_num, Lock,
+    p_num, 
     model=None, baseline_model=None,
     s_t=0, time_limit=-1,
     mcts_flg=True, sms=None,
@@ -92,6 +95,7 @@ def sub_create_dataset(
 ):
     print("bm:", baseline_model)
     global btqdm_flg
+    global Lock
     dataset = [[], []]
     if model is None:
         isModel = False
