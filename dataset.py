@@ -6,7 +6,7 @@ from glob import glob
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
-import random,pickle,math,os,threading
+import random,pickle,math,os,threading,tqdm
 
 def move2board(move,turn):
     a=np.zeros((8,8))
@@ -99,15 +99,20 @@ class gdrive_dataset():
         files_num=len(files)//thread_num+1
         files = [files[i*files_num:min((i+1)*files_num,len(files))] for i in range(thread_num)]
         th_array=[]
-        for file in files:
-            th_array.append(threading.Thread(target=self._file_getter,args=(file,)))
+        self.finish_num=[0 for _ in range(thread_num)]
+        tqdm_obj=tqdm.tqdm(range(thread_num))
+        for i,file in enumerate(files):
+            th_array.append(threading.Thread(target=self._files_getter,args=(file,i)))
         for th in th_array:
             th.start()
+        while True in [t.is_alive() for t in th_array]:
+            fnum=sum(self.finish_num)
+            tqdm_obj.update(fnum-tqdm_obj.n)
         for th in th_array:
             th.join()
-    def _files_getter(self,files):
+        tqdm_obj.close()
+    def _files_getter(self,files,t_n):
         for f in files:
-            print("Downloading:",f["title"])
             Download_flg=False
             Fail_count=0
             while (not Download_flg) and Fail_count<10:
@@ -118,8 +123,7 @@ class gdrive_dataset():
                 else:
                     Download_flg=True
             if Fail_count>=10:
-                print("Downlaod failed:",f["title"])
-            else:
-                print("Downlaod success:",f["title"])
+                print("Download failed:",f["title"])
+            self.finish_num[t_n]+=1
 
 
