@@ -96,11 +96,12 @@ class gdrive_dataset():
     def get_dataset_thread(self,thread_num=4):
         query=f'"{self.FOLDER_ID}" in parents'
         files = self.drive.ListFile({'q':query}).GetList()
+        fn=len(files)
         files_num=len(files)//thread_num+1
         files = [files[i*files_num:min((i+1)*files_num,len(files))] for i in range(thread_num)]
         th_array=[]
         self.finish_num=[0 for _ in range(thread_num)]
-        tqdm_obj=tqdm.tqdm(range(thread_num))
+        tqdm_obj=tqdm.tqdm(range(fn))
         for i,file in enumerate(files):
             th_array.append(threading.Thread(target=self._files_getter,args=(file,i)))
         for th in th_array:
