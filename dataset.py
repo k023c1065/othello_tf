@@ -96,7 +96,8 @@ class gdrive_dataset():
     def get_dataset_thread(self,thread_num=4):
         query=f'"{self.FOLDER_ID}" in parents'
         files = self.drive.ListFile({'q':query}).GetList()
-        files = np.split(files,thread_num)
+        files_num=len(files)//thread_num+1
+        files = [files[i*files_num:min((i+1)*files_num,len(files))] for i in range(thread_num)]
         th_array=[]
         for file in files:
             th_array.append(threading.Thread(target=self._file_getter,args=(file,)))
