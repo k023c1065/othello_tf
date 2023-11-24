@@ -50,7 +50,7 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
         if IS_MULTI:
             multiprocessing.freeze_support()
             Lock = multiprocessing.Lock()
-            end_num = multiprocessing.Value(int, 0)
+            end_num = multiprocessing.Value('i', 0)
             end_num.value = 0
             with multiprocessing.Pool(proc_num) as p:
                 pool_result = p.starmap(sub_create_dataset,
