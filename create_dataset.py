@@ -112,7 +112,7 @@ def sub_create_dataset(
         if isModel:
             model_usage = [(_ % 4)//2+1, (_ % 4) % 2+1]
         if not ((model_usage[0] == 0 and model_usage[0] == 0) or\
-                (model_usage[0] == 1 and model_usage == 1 and mcts_flg == False)):
+                (model_usage[0] == 1 and model_usage[1] == 1 and mcts_flg == False)):
             model_usage = [
                 0 if i == 1 and baseline_model is None else i for i in model_usage]
             cond = game_cond()
