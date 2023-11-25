@@ -1,4 +1,5 @@
 from concurrent.futures import thread
+import datetime
 import numpy as np
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
@@ -8,11 +9,54 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import random,pickle,math,os,threading,tqdm
 
+os.makedirs("./dataset/test/")
+os.makedirs("./dataset/train/")
+
 def move2board(move,turn):
     a=np.zeros((8,8))
     a[move[0]][move[1]]=1
     return a
-
+def split_datasets(buffer_size=10**5):
+    dataset_files=glob("./dataset/*.dat")
+    dataset=None
+    for file in dataset_files:
+        with open(file,"rb") as f:
+            data=pickle.load(f)
+        if dataset is None:
+            dataset=data
+        else:
+            dataset[0]=np.concatenate([dataset[0],data[0]])
+            dataset[1]=np.concatenate([dataset[1],data[1]])
+        if len(dataset[0])>buffer_size:
+            x_train,x_test,y_train,y_test=train_test_split(dataset[0],dataset[1],test_size=0.1,random_state=random.randint(0,2048))
+            d = str(datetime.datetime.now()).replace(" ", "_").replace(":", "_")
+            with open(f"./dataset/train/train_{d}.dat","wb") as f:
+                pickle.dump([x_train,y_train])
+            with open(f"./dataset/test/test_{d}.dat","wb") as f:
+                pickle.dump([x_test,y_test])
+            dataset=None
+def get_dataset_num():
+    print("loading...",end="")
+    dataset_files=glob("./dataset/*.dat")
+    dataset=None
+    if len(dataset_files)<1:
+        raise FileNotFoundError("Files that matched the pattern seems to be none.\n",
+                                "Please check dataset folder.")
+    num=0
+    for file in dataset_files:
+        try:
+            with open(file,"rb") as f:
+                data=pickle.load(f)
+            num+=len(data[0])
+            del data
+        except pickle.PickleError:
+            print(f"Failed to pickle file:{file}. Skipping")
+    if dataset is None:
+        raise FileNotFoundError("It seems all dataset file(s) have been corruppted\n",
+                                "Please Check a dataset folder for more info.",
+                                f"dataset_files:{dataset_files}")
+    print("Done")
+    return num
 def loadDataset():
     print("loading...",end="")
     dataset_files=glob("./dataset/*.dat")
