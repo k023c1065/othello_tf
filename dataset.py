@@ -102,18 +102,20 @@ def dataset2tensor(dataset,batch_size):
 class gdrive_dataset():
     #Will make this folder public in future
     FOLDER_ID="1ooAjVn2MUGs4fy2FK4wLMK24bm0EfqaJ"
+    _FOLDER_ID={"test":"1aVYYViqx4_XA-gVtsVWasX4Q7fNjc56y","train":"1MUqNwie4D_ceNNCe3e-7VD4dQXkb2kAJ"}
     def __init__(self):
         gauth = GoogleAuth(settings_file='setting.yaml')
         gauth.CommandLineAuth()
         self.drive = GoogleDrive(gauth)
     def get_dataset_list(self):
-        files=glob("dataset/*.dat")
-        files=[os.path.split(f)[1] for f in files]
+        files={"train":[os.path.split(f)[1] for f in glob("dataset/train/*.dat")],"test":[os.path.split(f)[1] for f in glob("dataset/test/*.dat")]}
         return files
     def get_gdrive_list(self):
-        query=f'"{self.FOLDER_ID}" in parents'
-        files = self.drive.ListFile({'q':query}).GetList()
-        files=[f["title"] for f in files]
+        files={}
+        for name,f_id in self._FOLDER_ID:
+            query=f'"{f_id} in parents'
+            f_list = self.drive.ListFile({'q':query}).GetList()
+            files[name]=[f["title"] for f in f_list]
         return files
     def transfer_dataset(self):
         """
@@ -121,13 +123,14 @@ class gdrive_dataset():
         """        
         dataset=self.get_dataset_list()
         gdrive_d=self.get_gdrive_list()
-        for d in dataset:
-            if not d in gdrive_d:
-                file=self.drive.CreateFile({"parents": [{"id": self.FOLDER_ID}]})
-                file.SetContentFile("dataset/"+d)
-                print("Uploading:",d)
-                file.Upload()
-    def get_dataset(self):
+        for n,data in dataset.items():
+            for d in data:
+                if not d in gdrive_d[n]:
+                    file=self.drive.CreateFile({"parents": [{"id": self._FOLDER_ID[n]}]})
+                    file.SetContentFile(f"dataset/{n}/"+d)
+                    print("Uploading:",d)
+                    file.Upload()
+    def _get_dataset(self):
         """
             Gets all dataset from Google Drive
         """        
@@ -138,16 +141,21 @@ class gdrive_dataset():
             f.GetContentFile("./dataset/"+f["title"])
     
     def get_dataset_thread(self,thread_num=4):
-        query=f'"{self.FOLDER_ID}" in parents'
-        files = self.drive.ListFile({'q':query}).GetList()
-        fn=len(files)
-        files_num=len(files)//thread_num+1
-        files = [files[i*files_num:min((i+1)*files_num,len(files))] for i in range(thread_num)]
+        files=self.get_gdrive_list()
+        f_list=dict()
+        final_fnum=0
+        for name,file in files.items():
+            f_num=len(file)
+            f_list[name] = [file[i*f_num:min((i+1)*f_num,len(file))] for i in range(thread_num//2)]
+            final_fnum+=fnum
         th_array=[]
         self.finish_num=[0 for _ in range(thread_num)]
-        tqdm_obj=tqdm.tqdm_notebook(range(fn))
-        for i,file in enumerate(files):
-            th_array.append(threading.Thread(target=self._files_getter,args=(file,i)))
+        tqdm_obj=tqdm.tqdm_notebook(range(final_fnum))
+        thread_id=0
+        for name,files in f_list.items():
+            for file in files:
+                th_array.append(threading.Thread(target=self._files_getter,args=(file,name,thread_id)))
+                thread_id+=1
         for th in th_array:
             th.start()
         while True in [t.is_alive() for t in th_array]:
@@ -156,13 +164,13 @@ class gdrive_dataset():
         for th in th_array:
             th.join()
         tqdm_obj.close()
-    def _files_getter(self,files,t_n):
+    def _files_getter(self,files,name,t_n):
         for f in files:
             Download_flg=False
             Fail_count=0
             while (not Download_flg) and Fail_count<10:
                 try:
-                    f.GetContentFile("./dataset/"+f["title"])
+                    f.GetContentFile(f"./dataset/{name}/"+f["title"])
                 except Exception:
                     Fail_count+=1
                 else:
