@@ -31,9 +31,9 @@ def split_datasets(buffer_size=10**5):
             x_train,x_test,y_train,y_test=train_test_split(dataset[0],dataset[1],test_size=0.1,random_state=random.randint(0,2048))
             d = str(datetime.datetime.now()).replace(" ", "_").replace(":", "_")
             with open(f"./dataset/train/train_{d}.dat","wb") as f:
-                pickle.dump([x_train,y_train])
+                pickle.dump([x_train,y_train],f)
             with open(f"./dataset/test/test_{d}.dat","wb") as f:
-                pickle.dump([x_test,y_test])
+                pickle.dump([x_test,y_test],f)
             dataset=None
 def get_dataset_num():
     print("loading...",end="")
