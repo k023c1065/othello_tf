@@ -20,9 +20,17 @@ def split_datasets(buffer_size=2**12):
     dataset=loadDataset()
     x_train,x_test,y_train,y_test=train_test_split(dataset[0],dataset[1],test_size=0.1,random_state=random.randint(0,2048))
     x_train=np.array_split(x_train,1+len(x_train)//buffer_size)
-    y_train=np.array_split(y_train,1+len(x_train)//buffer_size)
+    y_train=np.array_split(y_train,1+len(y_train)//buffer_size)
+    for i in range(len(x_train)):
+        d=str(datetime.datetime.now()).replace(" ","_").replace(":","-")
+        with open(f"./dataset/train/train_{d}.dat") as f:
+            pickle.dump([x_train[i],y_train[i]],f)
     x_test=np.array_split(x_test,1+len(x_test)//buffer_size)
     y_test=np.array_split(y_test,1+len(y_test)//buffer_size)
+    for i in range(len(x_test)):
+        d=str(datetime.datetime.now()).replace(" ","_").replace(":","-")
+        with open(f"./dataset/test/test_{d}.dat") as f:
+            pickle.dump([x_test[i],y_test[i]],f)
     return x_train,y_train,x_test,y_test
 def get_dataset_num():
     print("loading...",end="")
