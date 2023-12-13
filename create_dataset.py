@@ -77,6 +77,9 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
         d = str(datetime.datetime.now()).replace(" ", "_").replace(":", "_")
         with open(f"./dataset/data_{d}.dat", "wb") as f:
             pickle.dump(dataset, f)
+        dataset_file=glob("./dataset/*.dat")
+        if len(dataset_file)>10:
+            split_datasets()
         if isGDrive:
             gdrive.transfer_dataset()
     return dataset
@@ -187,7 +190,6 @@ def sub_create_dataset(
             #     Lock.release_lock(p_num)
             with Lock:
                 end_num.value += 1
-
                 tqdm_obj.update(end_num.value-tqdm_obj.n)
                 tqdm_obj.display()
     print(win_rate)

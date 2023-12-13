@@ -18,6 +18,7 @@ def move2board(move,turn):
     return a
 def split_datasets(buffer_size=2**12):
     dataset=loadDataset()
+    print("split_datasets dataset len:"len(dataset[0]),len(dataset[1]))
     x_train,x_test,y_train,y_test=train_test_split(dataset[0],dataset[1],test_size=0.1,random_state=random.randint(0,2048))
     x_train=np.array_split(x_train,1+len(x_train)//buffer_size)
     y_train=np.array_split(y_train,1+len(y_train)//buffer_size)
