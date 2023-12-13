@@ -2,7 +2,7 @@ import logging
 import datetime,os
 from multiprocessing import Lock
 if not os.path.dirname(__file__) == "":
-    os.chdir(os.path.dirname(__file__))
+    os.chdir("./"+os.path.dirname(__file__))
 filename=f"./log/{str(datetime.datetime.now())}.log".replace(" ","").replace(":","_")
 logging.basicConfig(filename=filename,level=logging.INFO,
                     format='%(asctime)s %(message)s')
