@@ -8,6 +8,7 @@ log_level=[]
 lock=Lock()
 
 class mylog:
+    print(os.path.dirname(__file__))
     if not os.path.dirname(__file__) == "":
         os.chdir(os.path.dirname(__file__))
     @classmethod

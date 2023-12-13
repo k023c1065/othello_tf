@@ -223,6 +223,7 @@ if __name__ == "__main__":
     mcts_flg = parser.mcts
     btqdm_flg = parser.btqdm
     fum = proc_num > 1
+    print(os.path.dirname(__file__))
     if not os.path.dirname(__file__) == "":
         os.chdir(os.path.dirname(__file__))
     print(mcts_flg)
