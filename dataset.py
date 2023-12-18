@@ -12,7 +12,7 @@ import random,pickle,math,os,threading,tqdm
 os.makedirs("./dataset/test/",exist_ok=True)
 os.makedirs("./dataset/train/",exist_ok=True)
 if not os.path.dirname(__file__) == "":
-    os.chdir("./"+os.path.dirname(__file__))
+    os.chdir(os.path.dirname(__file__))
 def move2board(move,turn):
     a=np.zeros((8,8))
     a[move[0]][move[1]]=1
