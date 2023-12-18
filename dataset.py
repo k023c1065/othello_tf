@@ -11,7 +11,8 @@ import random,pickle,math,os,threading,tqdm
 
 os.makedirs("./dataset/test/",exist_ok=True)
 os.makedirs("./dataset/train/",exist_ok=True)
-
+if not os.path.dirname(__file__) == "":
+    os.chdir("./"+os.path.dirname(__file__))
 def move2board(move,turn):
     a=np.zeros((8,8))
     a[move[0]][move[1]]=1
@@ -32,6 +33,9 @@ def split_datasets(buffer_size=2**12):
         d=str(datetime.datetime.now()).replace(" ","_").replace(":","-")
         with open(f"./dataset/test/test_{d}.dat","wb") as f:
             pickle.dump([x_test[i],y_test[i]],f)
+    temp_files=glob("dataset/*.dat")
+    for f in temp_files:
+        os.remove(f)
     return x_train,y_train,x_test,y_test
 def get_dataset_num():
     print("loading...",end="")
@@ -69,8 +73,8 @@ def loadDataset():
             if dataset is None:
                 dataset=data
             else:
-                dataset[0]=np.concatenate([dataset[0],data[0]])
-                dataset[1]=np.concatenate([dataset[1],data[1]])
+                dataset[0] = np.concatenate([dataset[0],data[0]])
+                dataset[1] = np.concatenate([dataset[1],data[1]])
         except pickle.PickleError:
             print(f"Failed to pickle file:{file}. Skipping")
     if dataset is None:
