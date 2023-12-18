@@ -116,7 +116,7 @@ class gdrive_dataset():
     def get_gdrive_list(self):
         files={}
         for name,f_id in self._FOLDER_ID.items():
-            query=f'"{f_id} in parents'
+            query=f'"{f_id}" in parents'
             f_list = self.drive.ListFile({'q':query}).GetList()
             files[name]=[f["title"] for f in f_list]
         return files
