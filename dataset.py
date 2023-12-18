@@ -11,6 +11,7 @@ import random,pickle,math,os,threading,tqdm
 
 os.makedirs("./dataset/test/",exist_ok=True)
 os.makedirs("./dataset/train/",exist_ok=True)
+print(os.path.dirname(__file__))
 if not os.path.dirname(__file__) == "":
     os.chdir(os.path.dirname(__file__))
 def move2board(move,turn):

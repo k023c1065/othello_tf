@@ -1,6 +1,7 @@
 import logging
 import datetime,os
 from multiprocessing import Lock
+print(os.path.dirname(__file__))
 if not os.path.dirname(__file__) == "":
     os.chdir(os.path.dirname(__file__))
 filename=f"./log/{str(datetime.datetime.now())}.log".replace(" ","").replace(":","_")
