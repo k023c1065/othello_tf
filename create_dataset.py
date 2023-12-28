@@ -80,6 +80,8 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
         dataset_file=glob("./dataset/*.dat")
         if len(dataset_file)>10:
             split_datasets()
+            for f in dataset_file:
+                os.remove(f)
         if isGDrive:
             gdrive.transfer_dataset()
     return dataset
