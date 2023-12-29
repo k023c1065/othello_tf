@@ -11,6 +11,7 @@ import tensorflow as tf
 import datetime
 import os
 import numpy as np
+import traceback
 from file_log.mylog import mylog
 btqdm_flg = False
 
@@ -53,10 +54,10 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
             Lock = multiprocessing.Lock()
             end_num = multiprocessing.Value(ctypes.c_int, 0)
             end_num.value = 0
-            with multiprocessing.Pool(proc_num,initializer=scd_initer,initargs=(Lock,end_num)) as p:
+            with multiprocessing.Pool(proc_num, initializer=scd_initer, initargs=(Lock, end_num)) as p:
                 pool_result = p.starmap(sub_create_dataset,
                                         [(play_num//proc_num, expand_rate, p_num+1, model,
-                                          None, 0, -1, mcts_flg, SMSearch,  proc_num)\
+                                          None, 0, -1, mcts_flg, SMSearch,  proc_num)
                                          for p_num in range(proc_num)],
                                         )
             for r in pool_result:
@@ -77,24 +78,29 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
         d = str(datetime.datetime.now()).replace(" ", "_").replace(":", "_")
         with open(f"./dataset/data_{d}.dat", "wb") as f:
             pickle.dump(dataset, f)
-        dataset_file=glob("./dataset/*.dat")
-        if len(dataset_file)>10:
+        dataset_file = glob("./dataset/*.dat")
+        if len(dataset_file) > 10:
             split_datasets()
             for f in dataset_file:
                 os.remove(f)
         if isGDrive:
             gdrive.transfer_dataset()
     return dataset
-Lock=None
-end_num=None
-def scd_initer(lock,em):
-    global Lock,end_num
-    Lock=lock
-    end_num=em
+
+
+Lock = None
+end_num = None
+
+
+def scd_initer(lock, em):
+    global Lock, end_num
+    Lock = lock
+    end_num = em
+
 
 def sub_create_dataset(
     play_num, expand_rate,
-    p_num, 
+    p_num,
     model=None, baseline_model=None,
     s_t=0, time_limit=-1,
     mcts_flg=True, sms=None,
@@ -102,7 +108,7 @@ def sub_create_dataset(
 ):
     print("bm:", baseline_model)
     global btqdm_flg
-    global Lock,end_num
+    global Lock, end_num
     dataset = [[], []]
     if model is None:
         isModel = False
@@ -123,7 +129,7 @@ def sub_create_dataset(
         model_usage = [0, 0]
         if isModel:
             model_usage = [(_ % 4)//2+1, (_ % 4) % 2+1]
-        if not ((model_usage[0] == 0 and model_usage[0] == 0) or\
+        if not ((model_usage[0] == 0 and model_usage[0] == 0) or
                 (model_usage[0] == 1 and model_usage[1] == 1 and mcts_flg == False)):
             model_usage = [
                 0 if i == 1 and baseline_model is None else i for i in model_usage]
@@ -202,10 +208,7 @@ def sub_create_dataset(
 def sfmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
 
-
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
+def init_parser(parser):
     parser.add_argument("--num", type=int, default=1024)
     parser.add_argument("--pnum", type=int, default=1)
     parser.add_argument("--model", "-m", action="store_true", default=False)
@@ -215,6 +218,8 @@ if __name__ == "__main__":
     parser.add_argument("--time", "-t", type=int, default=-1)
     parser.add_argument("--mcts", default=True, action="store_false")
     parser.add_argument("--btqdm", action="store_false")
+    return parser
+def do_parse(parser):
     parser = parser.parse_args()
     proc_num = parser.pnum
     play_num = parser.num
@@ -225,15 +230,29 @@ if __name__ == "__main__":
     mcts_flg = parser.mcts
     btqdm_flg = parser.btqdm
     fum = proc_num > 1
-    print(os.path.dirname(__file__))
+    return locals()
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser=init_parser(parser)
+    proc_num, play_num, transflg, mflg, gflg, time_limit, mcts_flg, btqdm_flg, fum = 0, 0, 0, 0, 0, 0, 0, 0, 0
+    parse_variable=do_parse(parser=parser)
+    globals().update(parse_variable)
+    assert play_num>0
+    print(__file__, os.path.dirname(__file__))
     if not os.path.dirname(__file__) == "":
         os.chdir(os.path.dirname(__file__))
-    print(mcts_flg)
     if not transflg:
-        main(proc_num, play_num,
-             isModel=mflg, isGDrive=gflg,
-             time_limit=time_limit, ForceUseMulti=fum,
-             mcts_flg=mcts_flg)
+        try:
+            main(proc_num, play_num,
+                 isModel=mflg, isGDrive=gflg,
+                 time_limit=time_limit, ForceUseMulti=fum,
+                 mcts_flg=mcts_flg)
+        except Exception as e:
+            print(traceback.format_exc())
+            mylog.add_log(traceback.format_exc())
+            raise Exception(f"Unexpected Error,Please check {mylog.get_log_name()}")
     else:
         gdrive = gdrive_dataset()
         gdrive.get_dataset()

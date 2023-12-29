@@ -10,7 +10,7 @@ import tensorflow as tf
 import random,pickle,math,os,threading,tqdm
 
 
-print(os.path.dirname(__file__))
+print(__file__,os.path.dirname(__file__))
 if not os.path.dirname(__file__) == "":
     os.chdir(os.path.dirname(__file__))
 os.makedirs("./dataset/test/",exist_ok=True)
