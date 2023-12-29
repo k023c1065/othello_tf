@@ -20,3 +20,8 @@ class mylog:
     @classmethod
     def get_log_name(cls):
         return filename
+    
+    @classmethod
+    def define_config(cls,filename):
+        logging.basicConfig(filename=filename,level=logging.INFO,
+                    format='%(asctime)s %(message)s')

@@ -14,7 +14,7 @@ import numpy as np
 import traceback
 from file_log.mylog import mylog
 btqdm_flg = False
-
+log_file_name=f"./log/{str(datetime.datetime.now())}.log".replace(" ","").replace(":","_")
 
 def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isModel=False,
          ForceUseMulti=False,
@@ -67,7 +67,7 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
                 else:
                     dataset[0] = dataset[0]+r[0]
                     dataset[1] = np.concatenate([dataset[1], r[1]])
-            mylog.add_log(f"Valid dataset:{len(dataset[0])*100/play_num}%")
+            mylog.add_log(f"Valid dataset:{(len(dataset[0])*100/play_num)/64}%")
         else:
             dataset = sub_create_dataset(
                 play_num, expand_rate, None, None, model)
@@ -81,8 +81,6 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
         dataset_file = glob("./dataset/*.dat")
         if len(dataset_file) > 10:
             split_datasets()
-            for f in dataset_file:
-                os.remove(f)
         if isGDrive:
             gdrive.transfer_dataset()
     return dataset
@@ -106,6 +104,7 @@ def sub_create_dataset(
     mcts_flg=True, sms=None,
     pnum=1
 ):
+    mylog.define_config(log_file_name)
     print("bm:", baseline_model)
     global btqdm_flg
     global Lock, end_num
