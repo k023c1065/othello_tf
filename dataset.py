@@ -193,9 +193,8 @@ class gdrive_dataset():
         tqdm_obj=tqdm.tqdm_notebook(range(final_fnum))
         thread_id=0
         for name,files in f_list.items():
-            for file in files:
-                th_array.append(threading.Thread(target=self._files_getter,args=(file,name,thread_id)))
-                thread_id+=1
+            th_array.append(threading.Thread(target=self._files_getter,args=(files,name,thread_id)))
+            thread_id+=1
         for th in th_array:
             th.start()
         while True in [t.is_alive() for t in th_array]:
