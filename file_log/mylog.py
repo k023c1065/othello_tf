@@ -4,13 +4,9 @@ from multiprocessing import Lock
 print(__file__,os.path.dirname(__file__))
 if not os.path.dirname(__file__) == "":
     os.chdir(os.path.dirname(__file__))
-if not "filename" in globals():
-    filename=f"./log/{str(datetime.datetime.now())}.log".replace(" ","").replace(":","_")
-logging.basicConfig(filename=filename,level=logging.INFO,
-                    format='%(asctime)s %(message)s')
 log_level=[]
 lock=Lock()
-
+filename=None
 class mylog:
     @classmethod
     def add_log(cls,msg,level=0):
@@ -22,6 +18,8 @@ class mylog:
         return filename
     
     @classmethod
-    def define_config(cls,filename):
+    def define_config(cls,fn):
+        global filename
+        filename=fn
         logging.basicConfig(filename=filename,level=logging.INFO,
                     format='%(asctime)s %(message)s')

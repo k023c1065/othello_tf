@@ -61,6 +61,42 @@ def get_dataset_num():
                                 f"dataset_files:{dataset_files}")
     print("Done")
     return num
+def load_train_test_data():
+    
+    train_files=glob("./dataset/train/*.dat")
+    if len(train_files)<1:
+        raise FileNotFoundError("Files that matched the pattern seems to be none.\n",
+                                "Please check dataset folder.")
+    train_dataset=None
+    for file in train_files:
+        try:
+            with open(file,"rb") as f:
+                data=pickle.load(f)
+            if train_dataset is None:
+                train_dataset=data
+            else:
+                train_dataset[0] = np.concatenate([train_dataset[0],data[0]])
+                train_dataset[1] = np.concatenate([train_dataset[1],data[1]])
+        except pickle.PickleError:
+            print(f"Failed to pickle file:{file}. Skipping")
+            
+    
+    test_files=glob("./dataset/train/*.dat")
+    if len(test_files)<1:
+        raise FileNotFoundError("Files that matched the pattern seems to be none.\n",
+                                "Please check dataset folder.")
+    test_dataset=None
+    for file in test_files:
+        try:
+            with open(file,"rb") as f:
+                data=pickle.load(f)
+            if test_dataset is None:
+                test_dataset=data
+            else:
+                test_dataset[0] = np.concatenate([test_dataset[0],data[0]])
+                test_dataset[1] = np.concatenate([test_dataset[1],data[1]])
+        except pickle.PickleError:
+            print(f"Failed to pickle file:{file}. Skipping")
 def loadDataset():
     print("loading...",end="")
     dataset_files=glob("./dataset/*.dat")
@@ -151,7 +187,7 @@ class gdrive_dataset():
         for name,file in files.items():
             f_num=len(file)
             f_list[name] = [file[i*f_num:min((i+1)*f_num,len(file))] for i in range(thread_num//2)]
-            final_fnum+=fnum
+            final_fnum+=f_num
         th_array=[]
         self.finish_num=[0 for _ in range(thread_num)]
         tqdm_obj=tqdm.tqdm_notebook(range(final_fnum))
