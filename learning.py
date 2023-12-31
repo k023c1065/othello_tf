@@ -6,7 +6,7 @@ import tensorflow as tf
 def main(EPOCH=10, batch_size=16, input_shape=(8, 8, 2), t_module=None):
     dataset = loadDataset()
     train_ds, test_ds = dataset2tensor(dataset, batch_size)
-    del dataset
+    del dataset 
     if t_module is None:
         model = miniResNet(input_shape, 64)
         print(np.empty(input_shape)[np.newaxis].shape)
