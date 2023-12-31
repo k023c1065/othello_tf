@@ -48,7 +48,7 @@ def get_dataset_num():
         raise FileNotFoundError("Files that matched the pattern seems to be none.\n",
                                 "Please check dataset folder.")
     num=0
-    for file in dataset_files:
+    for file in tqdm(dataset_files):
         try:
             with open(file,"rb") as f:
                 data=pickle.load(f)
@@ -69,7 +69,7 @@ def load_train_test_data():
         raise FileNotFoundError("Files that matched the pattern seems to be none.\n",
                                 "Please check dataset folder.")
     train_dataset=None
-    for file in train_files:
+    for file in tqdm.tqdm_notebook(train_files):
         try:
             print(file)
             with open(file,"rb") as f:
@@ -88,7 +88,7 @@ def load_train_test_data():
         raise FileNotFoundError("Files that matched the pattern seems to be none.\n",
                                 "Please check dataset folder.")
     test_dataset=None
-    for file in test_files:
+    for file in tqdm.tqdm_notebook(test_files):
         try:
             print(file)
             with open(file,"rb") as f:
