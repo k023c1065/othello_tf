@@ -71,7 +71,6 @@ def load_train_test_data():
     train_dataset=None
     for file in tqdm.tqdm_notebook(train_files):
         try:
-            print(file)
             with open(file,"rb") as f:
                 data=pickle.load(f)
             if train_dataset is None:
@@ -83,14 +82,13 @@ def load_train_test_data():
             print(f"Failed to pickle file:{file}. Skipping")
             
     
-    test_files=glob("./dataset/train/*.dat")
+    test_files=glob("./dataset/test/*.dat")
     if len(test_files)<1:
         raise FileNotFoundError("Files that matched the pattern seems to be none.\n",
                                 "Please check dataset folder.")
     test_dataset=None
     for file in tqdm.tqdm_notebook(test_files):
         try:
-            print(file)
             with open(file,"rb") as f:
                 data=pickle.load(f)
             if test_dataset is None:
