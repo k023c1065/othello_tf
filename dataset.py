@@ -205,7 +205,7 @@ class gdrive_dataset():
             f_list[name] = [file[i*f_num:min((i+1)*f_num,len(file))] for i in range(thread_num//2)]
             final_fnum+=f_num
         th_array=[]
-        self.finish_num=[0 for _ in range(thread_num)]
+        self.finish_num=[0 for _ in range(thread_num*2)]
         tqdm_obj=tqdm.tqdm_notebook(range(final_fnum))
         thread_id=0
         for name,id in self._FOLDER_ID.items():
