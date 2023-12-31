@@ -71,6 +71,7 @@ def load_train_test_data():
     train_dataset=None
     for file in train_files:
         try:
+            print(file)
             with open(file,"rb") as f:
                 data=pickle.load(f)
             if train_dataset is None:
@@ -89,6 +90,7 @@ def load_train_test_data():
     test_dataset=None
     for file in test_files:
         try:
+            print(file)
             with open(file,"rb") as f:
                 data=pickle.load(f)
             if test_dataset is None:
