@@ -98,6 +98,7 @@ def load_train_test_data():
                 test_dataset[1] = np.concatenate([test_dataset[1],data[1]])
         except pickle.PickleError:
             print(f"Failed to pickle file:{file}. Skipping")
+    return train_dataset,test_dataset
 def loadDataset():
     print("loading...",end="")
     dataset_files=glob("./dataset/*.dat")
