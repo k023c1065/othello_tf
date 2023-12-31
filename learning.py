@@ -16,9 +16,9 @@ def main(EPOCH=10, batch_size=16, input_shape=(8, 8, 2), t_module=None):
         if len(mfs) > 0:
             load_model_flg = input("Seems like we got some model file(s) in a model folder." +
                                    "Do you prefer to load the model file?(Y/n):")
-        if load_model_flg.lower() == "y":
-            print("loading:", mfs[0])
-            model.load_weights(mfs[0])
+            if load_model_flg.lower() == "y":
+                print("loading:", mfs[0])
+                model.load_weights(mfs[0])
         model.summary()
         optimizer = tf.keras.optimizers.Adam()
         loss_object = tf.keras.losses.categorical_crossentropy
