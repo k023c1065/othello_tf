@@ -123,7 +123,7 @@ def loadDataset():
                                 f"dataset_files:{dataset_files}")
     print("Done")
     return dataset
-def dataset2tensor(dataset,batch_size):
+def dataset2tensor(dataset,batch_size,do_shuffle):
     x,y=dataset[0],dataset[1]
     x=np.array(x,dtype="float32")
     y=np.array(y,dtype="float32").reshape(y.shape[0],64)
@@ -131,16 +131,16 @@ def dataset2tensor(dataset,batch_size):
     print(pd.DataFrame(pd.Series(x[:min(len(x),30000)].ravel()).describe()).transpose())
     print(pd.DataFrame(pd.Series(np.array(y[:min(len(y),30000)],dtype="float32").reshape(min(y.shape[0],30000),64).ravel()).describe()).transpose())
     print("-------Describe End------")
-    x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.1,random_state=random.randint(0,2048))
-    print(x_train.shape)
-    print(y_train.shape)
-    test_batch_size=max(128,min(int(2**(int(math.log2(len(x_test)))-2)),2048))
-    test_ds = tf.data.Dataset.from_tensor_slices(
-                (x_test,y_test)
-            ).batch(test_batch_size)
-    train_ds = tf.data.Dataset.from_tensor_slices(
-            (x_train, y_train)).shuffle(100000,reshuffle_each_iteration=True).batch(batch_size)
-    return train_ds,test_ds
+    batch_size=max(128,min(int(2**(int(math.log2(len(x)))-2)),2048))
+    if do_shuffle:
+        ds=tf.data.Dataset.from_tensor_slices(
+            (x, y)
+            ).shuffle(100000,reshuffle_each_iteration=True).batch(batch_size)
+    else:
+        ds = tf.data.Dataset.from_tensor_slices(
+                (x,y)
+            ).batch(batch_size)
+    return ds
 
 def split_array(ary,num):
     result=[]
