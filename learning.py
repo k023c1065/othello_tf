@@ -1,13 +1,12 @@
-from dataset import dataset2tensor, load_train_test_data
+from dataset import dataset2tensor, loadDataset
 from network import *
 import tensorflow as tf
 
 
 def main(EPOCH=10, batch_size=16, input_shape=(8, 8, 2), t_module=None):
-    train,test=load_train_test_data()
-    train_ds = dataset2tensor(train,batch_size,True)
-    test_ds = dataset2tensor(test, 512,False)
-    del train,test
+    dataset = loadDataset()
+    train_ds, test_ds = dataset2tensor(dataset, batch_size)
+    del dataset
     if t_module is None:
         model = miniResNet(input_shape, 64)
         print(np.empty(input_shape)[np.newaxis].shape)
