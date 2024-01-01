@@ -548,19 +548,21 @@ if __name__ == "__main__":
     fs = sorted(fs, key=os.path.getmtime)
     f = fs[-1]
     import network
+    GAME_COUNT=100
     target_model = network.miniResNet((8, 8, 2), 64)
     target_model(np.empty((1, 8, 8, 2)))
     target_model.load_weights(f)
     print(f)
+    baseline_model = None
     if len(fs) > 1:
         baseline_model = network.raw_load_model(fs[-2])
         print(fs[-2])
-
+    
     tp = test_play(players=["Model", "Model"], model=[
-                   target_model, baseline_model], game_count=20, Doshuffle=False)
+                   target_model, baseline_model], game_count=GAME_COUNT//2, Doshuffle=False)
     score = tp.loop_game()
     tp = test_play(players=["Model", "Model"], model=[
-                   baseline_model, target_model], game_count=20, Doshuffle=False)
+                   baseline_model, target_model], game_count=GAME_COUNT//2, Doshuffle=False)
     score2 = tp.loop_game()
     score2[0], score2[1] = score2[1], score2[0]
     score = np.array(score)+np.array(score2)
