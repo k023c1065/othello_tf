@@ -546,14 +546,15 @@ class test_play():
 if __name__ == "__main__":
     fs = glob.glob("model/*")
     fs = sorted(fs, key=os.path.getmtime)
-    f = fs[-1]
+    print(fs)
+    f = fs[0]
     import network
     GAME_COUNT=100
     target_model = network.miniResNet((8, 8, 2), 64)
     target_model(np.empty((1, 8, 8, 2)))
     target_model.load_weights(f)
     print(f)
-    baseline_model = None
+    baseline_model = fs[1]
     if len(fs) > 1:
         baseline_model = network.raw_load_model(fs[-2])
         print(fs[-2])

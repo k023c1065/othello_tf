@@ -57,7 +57,7 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
             with multiprocessing.Pool(proc_num, initializer=scd_initer, initargs=(Lock, end_num)) as p:
                 pool_result = p.starmap(sub_create_dataset,
                                         [(play_num//proc_num, expand_rate, p_num+1, model,
-                                          None, 0, -1, mcts_flg, SMSearch,  proc_num)
+                                          None, 0, -1, mcts_flg, SMSearch,  proc_num, log_file_name)
                                          for p_num in range(proc_num)],
                                         )
             for r in pool_result:
@@ -102,7 +102,8 @@ def sub_create_dataset(
     model=None, baseline_model=None,
     s_t=0, time_limit=-1,
     mcts_flg=True, sms=None,
-    pnum=1
+    pnum=1,
+    log_file_name=f"./log/{str(datetime.datetime.now())}.log".replace(" ","").replace(":","_")
 ):
     mylog.define_config(log_file_name)
     print("bm:", baseline_model)
