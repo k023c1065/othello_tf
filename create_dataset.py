@@ -263,6 +263,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(traceback.format_exc())
             mylog.add_log(traceback.format_exc())
+            input("Waiting...")
             raise Exception(f"Unexpected Error,Please check {mylog.get_log_name()}")
     else:
         gdrive = gdrive_dataset()
