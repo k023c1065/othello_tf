@@ -45,8 +45,7 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
                 # Neural network will use full cpu cores
                 # and multiprocessing will be bad in this situation
                 IS_MULTI = False
-            model_files=glob("model/*")
-            if "baseline.h5" in model_files:
+            if os.path.isfile("./model/baseline.h5"):
                 baseline_model = network.raw_load_model("model/baseline.h5")
                 baseline_SMSearch = simple_model_search(baseline_model,search_rate=0.75)
                 SMSearch=[SMSearch,baseline_SMSearch]
