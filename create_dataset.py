@@ -117,7 +117,7 @@ def sub_create_dataset(
     log_file_name=f"./log/{str(datetime.datetime.now())}.log".replace(" ","").replace(":","_")
 ):
     mylog.define_config(log_file_name)
-    print("bm:", baseline_model)
+    #print("bm:", baseline_model)
     global btqdm_flg
     global Lock, end_num
     dataset = [[], []]
@@ -188,7 +188,7 @@ def sub_create_dataset(
             score = list(cond.get_score())
             if model_usage[0] != model_usage[1]:
                 win_rate[model_usage[np.argmax(score)]] += 1
-            if model_usage[0] == model_usage[1] or score[model_usage.index(0)] == 1:
+            if (baseline_model is not None and model is not None ) or (model_usage[0] == model_usage[1] or score[model_usage.index(0)] == 1):
                 for i, s in enumerate(score):
                     for d in data[i]:
                         board = d[0]
