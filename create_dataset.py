@@ -34,12 +34,13 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
         gdrive = None
     s_t = time.time()
     last_fn = None
+    SMSearch=[None,None]
     while (isGDrive or i == 0) and (time_limit < 0 or time.time()-s_t <= time_limit):
         if isModel:
             model, fn = network.raw_load_model(get_filename=True)
             if last_fn is None or fn != last_fn:
                 last_fn = fn
-                SMSearch = simple_model_search(model,search_rate=0.75)
+                SMSearch[0] = simple_model_search(model,search_rate=0.75)
             if IS_MULTI and len(tf.config.list_physical_devices('GPU')) < 1 and not ForceUseMulti:
                 print("Multi processing feature will be ignored")
                 # Neural network will use full cpu cores
@@ -47,8 +48,9 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
                 IS_MULTI = False
             if os.path.isfile("./model/baseline.h5"):
                 baseline_model = network.raw_load_model("model/baseline.h5")
-                baseline_SMSearch = simple_model_search(baseline_model,search_rate=0.75)
-                SMSearch=[SMSearch,baseline_SMSearch]
+                if SMSearch[1] is None:
+                    baseline_SMSearch = simple_model_search(baseline_model,search_rate=0.75)
+                    SMSearch[1]=baseline_SMSearch
                 print("Loading baseline model:baseline.h5")
             else:
                 baseline_model= None
@@ -263,7 +265,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(traceback.format_exc())
             mylog.add_log(traceback.format_exc())
-            input("Waiting...")
+            input(f"log file name:{mylog.get_log_name()} \r\nWaiting...")
             raise Exception(f"Unexpected Error,Please check {mylog.get_log_name()}")
     else:
         gdrive = gdrive_dataset()
