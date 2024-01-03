@@ -1,4 +1,4 @@
-from tqdm import tqdm_gui
+from tqdm import tqdm, tqdm_gui
 import os
 import time
 import random
@@ -418,10 +418,10 @@ class minimax_search():
 
 
 class simple_model_search():
-    def __init__(self, model):
+    def __init__(self, model, search_rate=1):
         self.model = model
         self.model_cache = dict()
-
+        self.search_rate=search_rate
     def search(self, cond):
         moves = []
         if cond.hash() in self.model_cache:
@@ -434,20 +434,33 @@ class simple_model_search():
             0].reshape((8, 8))
         s = -1e9
         best_move = [-1, -1]
-        for m in moves:
-            if r[m[0]][m[1]] > s:
-                best_move = m
-                s = r[m[0]][m[1]]
-        self.model_cache[cond.hash()] = best_move
+        if len(moves)>0:
+            if self.search_rate>10:
+                for m in moves:
+                    if r[m[0]][m[1]] > s:
+                        best_move = m
+                        s = r[m[0]][m[1]]
+                self.model_cache[cond.hash()] = best_move
+            else:
+                weights=[]
+                for m in moves:
+                    weights.append(
+                        r[m[0]][m[1]]**self.search_rate 
+                    )
+                best_move=random.choices(moves,weights=weights,k=1)[0]
         return best_move
 
 
 class test_play():
-    def __init__(self, players=["Model", "Random"], model=[None, None], game_count=100, isDebug=None, Doshuffle=False):
+    def __init__(
+        self, players=["Model", "Random"], model=[None, None], game_count=100,
+        isDebug=None, Doshuffle=False,
+        useMCTS=True):
         self.minimax = minimax_search()
         self.isDebug = isDebug
         self.players = players
         self.shuffle = Doshuffle
+        self.use_mcts=useMCTS
         for i, player in enumerate(self.players):
             if player == "Model":
                 if model[i] == None:
@@ -460,6 +473,8 @@ class test_play():
                     model[i] = raw_load_model(model[i])
         self.mcts = [MCTS(game_cond(), model[i]) if self.players[i]
                      == "Model" else None for i in range(2)]
+        self.simple_search=[simple_model_search(model[i]) if self.players[i]
+                     == "Model" else None for i in range(2)]
         self.game_count = game_count
         self.turn_append = 0
         if self.isDebug is None:
@@ -471,10 +486,10 @@ class test_play():
     def loop_game(self):
         win_count = [0, 0]
 
-        for _ in range(self.game_count):
+        for _ in tqdm(range(self.game_count)):
             if self.shuffle:
                 self.turn_append = random.randint(0, 1)
-            print(f"Target model Player No.:{self.turn_append+1}")
+            #print(f"Target model Player No.:{self.turn_append+1}")
             ab_s = []
             try:
                 cond = game_cond()
@@ -483,8 +498,8 @@ class test_play():
                 end_flg = 0
                 print()
                 while not (cond.isEnd() or end_flg >= 2):
-                    print("\rGame count:", _+1, "space left:", 64 -
-                          (cond.board[0]+cond.board[1]).sum(), end="        ")
+                    #print("\rGame count:", _+1, "space left:", 64 -
+                    #      (cond.board[0]+cond.board[1]).sum(), end="        ")
                     poss = []
                     for p in cond.placable:
                         if cond.is_movable(p[0], p[1]):
@@ -509,7 +524,7 @@ class test_play():
             win_count[(win_side+self.turn_append) % 2] += 1
             if win_side == 1:
                 print("ab_s:", ab_s)
-            print("win_count:", win_count)
+            #print("win_count:", win_count)
 
         return win_count
 
@@ -522,6 +537,9 @@ class test_play():
                 ab_s.append(s)
                 if self.isDebug:
                     print("s:", s)
+            elif not self.use_mcts:
+                next_move = self.simple_search[(cond.turn+self.turn_append) %
+                                      2].search(cond)
             else:
                 next_move = self.mcts[(cond.turn+self.turn_append) %
                                       2].get_next_move(cond)[0]
@@ -549,7 +567,8 @@ if __name__ == "__main__":
     print(fs)
     f = fs[0]
     import network
-    GAME_COUNT=100
+    GAME_COUNT=1000
+    USE_MCTS=True
     target_model = network.miniResNet((8, 8, 2), 64)
     target_model(np.empty((1, 8, 8, 2)))
     target_model.load_weights(f)
@@ -560,11 +579,13 @@ if __name__ == "__main__":
         print(fs[-2])
     
     tp = test_play(players=["Model", "Model"], model=[
-                   target_model, baseline_model], game_count=GAME_COUNT//2, Doshuffle=False)
+                   target_model, baseline_model], game_count=GAME_COUNT//2, Doshuffle=False, useMCTS=USE_MCTS)
     score = tp.loop_game()
     tp = test_play(players=["Model", "Model"], model=[
-                   baseline_model, target_model], game_count=GAME_COUNT//2, Doshuffle=False)
+                   baseline_model, target_model], game_count=GAME_COUNT//2, Doshuffle=False, useMCTS=USE_MCTS)
     score2 = tp.loop_game()
     score2[0], score2[1] = score2[1], score2[0]
     score = np.array(score)+np.array(score2)
+    print()
+    print(f"{f} win rate against {fs[1]}")
     print((score[0]*100)/score.sum(), "%")

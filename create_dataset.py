@@ -39,14 +39,26 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
             model, fn = network.raw_load_model(get_filename=True)
             if last_fn is None or fn != last_fn:
                 last_fn = fn
-                SMSearch = simple_model_search(model)
+                SMSearch = simple_model_search(model,search_rate=0.75)
             if IS_MULTI and len(tf.config.list_physical_devices('GPU')) < 1 and not ForceUseMulti:
                 print("Multi processing feature will be ignored")
                 # Neural network will use full cpu cores
                 # and multiprocessing will be bad in this situation
                 IS_MULTI = False
+            model_files=glob("model/*")
+            if "baseline.h5" in model_files:
+                baseline_model = network.raw_load_model("model/baseline.h5")
+                baseline_SMSearch = simple_model_search(baseline_model,search_rate=0.75)
+                SMSearch=[SMSearch,baseline_SMSearch]
+                print("Loading baseline model:baseline.h5")
+            else:
+                baseline_model= None
+                SMSearch=[SMSearch]
+                print("Not loading Baseline model.\
+                      Changed the model file name into 'baseline.h5' to apply baseline model.")
         else:
             model = None
+            baseline_model = None
         i += 1
         dataset = [[], []]
         if IS_MULTI:
@@ -57,7 +69,7 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
             with multiprocessing.Pool(proc_num, initializer=scd_initer, initargs=(Lock, end_num)) as p:
                 pool_result = p.starmap(sub_create_dataset,
                                         [(play_num//proc_num, expand_rate, p_num+1, model,
-                                          None, 0, -1, mcts_flg, SMSearch,  proc_num, log_file_name)
+                                          baseline_model, 0, -1, mcts_flg, SMSearch,  proc_num, log_file_name)
                                          for p_num in range(proc_num)],
                                         )
             for r in pool_result:
@@ -80,7 +92,7 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
             pickle.dump(dataset, f)
         dataset_file = glob("./dataset/*.dat")
         if len(dataset_file) > 10:
-            split_datasets()
+            split_datasets(file_num=4)
         if isGDrive:
             gdrive.transfer_dataset()
     return dataset
@@ -150,9 +162,9 @@ def sub_create_dataset(
                         poss.append(p)
                 if len(poss) > 0:
                     end_flg = 0
-                    if model_usage[cond.turn] == 0:
+                    if model_usage[cond.turn] == 0: #Random
                         next_move = random.choice(poss)
-                    elif model_usage[cond.turn] == 1:
+                    elif model_usage[cond.turn] == 1: #Baseline model
                         if cond.board[0].sum()+cond.board[1].sum() >= 56:
                             _, next_move = minimax.get_move(cond)
                         else:
@@ -160,15 +172,15 @@ def sub_create_dataset(
                                 next_move = baseline_mcts.get_next_move(cond)[
                                     0]
                             else:
-                                next_move = sms.search(cond)
-                    elif model_usage[cond.turn] == 2:
+                                next_move = sms[1].search(cond)
+                    elif model_usage[cond.turn] == 2: #Main Model
                         if cond.board[0].sum()+cond.board[1].sum() >= 56:
                             s, next_move = minimax.get_move(cond)
                         else:
                             if mcts_flg:
                                 next_move = mcts.get_next_move(cond)[0]
                             else:
-                                next_move = sms.search(cond)
+                                next_move = sms[0].search(cond)
                     data[cond.turn].append([cond.board, next_move, poss])
                     cond.move(next_move[0], next_move[1])
                 else:

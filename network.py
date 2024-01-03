@@ -185,7 +185,46 @@ class ResNet(tf.keras.Model):
                             np.array(x)), np.mean(np.array(x)), np.std(np.array(x)))
         return x
 
-
+class value_resNet(tf.keras.Model):
+    def __init__(self, input_shape, output_dim):
+        self.init_input_shape = input_shape
+        super().__init__()
+        self._kl = [
+            kl.BatchNormalization(),
+            kl.Activation(tf.nn.relu),
+            kl.Conv2D(32, kernel_size=3, strides=(1, 1),
+                      padding="same", activation="relu"),
+            [Res_Block(32, 32) for _ in range(2)],
+            kl.GlobalAveragePooling2D(),
+            kl.Dense(64, activation="relu"),
+            kl.Dense(output_dim, activation="softmax")
+        ]
+    def call(self, x, training=True, isDebug=False):
+        try:
+            assert (self.init_input_shape == x.shape[1:])
+        except AssertionError:
+            raise AssertionError(f"Seems like input shape differs from init one.\n",
+                                 f"init shape:{self.init_input_shape}",
+                                 f"input shape:{x.shape[1:]}")
+        for layer in self._kl:
+            if isinstance(layer, list):
+                for _layer in layer:
+                    x = _layer(x, training)
+                    if isDebug:
+                        print(_layer.name, x.shape, np.min(np.array(x)), np.max(
+                            np.array(x)), np.mean(np.array(x)), np.std(np.array(x)))
+            else:
+                if type(layer) == kl.BatchNormalization:
+                    x = layer(x, training)
+                    if isDebug:
+                        print(layer.name, x.shape, np.min(np.array(x)), np.max(
+                            np.array(x)), np.mean(np.array(x)), np.std(np.array(x)))
+                else:
+                    x = layer(x)
+                    if isDebug:
+                        print(layer.name, x.shape, np.min(np.array(x)), np.max(
+                            np.array(x)), np.mean(np.array(x)), np.std(np.array(x)))
+        return x
 class miniResNet(tf.keras.Model):
     def __init__(self, input_shape, output_dim):
         self.init_input_shape = input_shape
@@ -327,7 +366,7 @@ class train_module():
         train_loss = get_moving_ave(self.train_loss)
         plt.plot([i for i in range(len(self.train_loss))],
                  train_loss, label="train")
-        plt.plot(self.test_loss[0], self.test_loss[1], label="test")
+        plt.plot(self.test_loss[0], self.test_loss[1], label="test", marker="o")
         plt.grid()
         plt.legend()
         plt.savefig(self.plt_file_name)

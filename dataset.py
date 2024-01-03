@@ -20,18 +20,26 @@ def move2board(move,turn):
     a=np.zeros((8,8))
     a[move[0]][move[1]]=1
     return a
-def split_datasets(buffer_size=2**12):
+def split_datasets(buffer_size=2**12,file_num=None):
     dataset=loadDataset()
     print("split_datasets dataset len:",len(dataset[0]),len(dataset[1]))
     x_train,x_test,y_train,y_test=train_test_split(dataset[0],dataset[1],test_size=0.1,random_state=random.randint(0,2048))
-    x_train=np.array_split(x_train,1+len(x_train)//buffer_size)
-    y_train=np.array_split(y_train,1+len(y_train)//buffer_size)
+    if file_num is None:
+        x_train=np.array_split(x_train,1+len(x_train)//buffer_size)
+        y_train=np.array_split(y_train,1+len(y_train)//buffer_size)
+    else:
+        x_train=np.array_split(x_train,file_num)
+        y_train=np.array_split(y_train,file_num)
     for i in range(len(x_train)):
         d=str(datetime.datetime.now()).replace(" ","_").replace(":","-")
         with open(f"./dataset/train/train_{d}.dat","wb") as f:
             pickle.dump([x_train[i],y_train[i]],f)
-    x_test=np.array_split(x_test,1+len(x_test)//buffer_size)
-    y_test=np.array_split(y_test,1+len(y_test)//buffer_size)
+    if file_num is None:
+        x_test=np.array_split(x_test,1+len(x_test)//buffer_size)
+        y_test=np.array_split(y_test,1+len(y_test)//buffer_size)
+    else:
+        x_test=np.array_split(x_test,file_num)
+        y_test=np.array_split(y_test,file_num)
     for i in range(len(x_test)):
         d=str(datetime.datetime.now()).replace(" ","_").replace(":","-")
         with open(f"./dataset/test/test_{d}.dat","wb") as f:
@@ -80,7 +88,8 @@ def load_train_test_data():
                 train_dataset[1] = np.concatenate([train_dataset[1],data[1]])
         except pickle.PickleError:
             print(f"Failed to pickle file:{file}. Skipping")
-            
+        except EOFError:
+            print(f"Failed to pickle file:{file}. Skipping")    
     
     test_files=glob("./dataset/test/*.dat")
     if len(test_files)<1:
@@ -98,6 +107,8 @@ def load_train_test_data():
                 test_dataset[1] = np.concatenate([test_dataset[1],data[1]])
         except pickle.PickleError:
             print(f"Failed to pickle file:{file}. Skipping")
+        except EOFError:
+            print(f"Failed to pickle file:{file}. Skipping")
     return train_dataset,test_dataset
 def loadDataset():
     print("loading...",end="")
@@ -109,7 +120,10 @@ def loadDataset():
     for file in dataset_files:
         try:
             with open(file,"rb") as f:
-                data=pickle.load(f)
+                try:
+                    data=pickle.load(f)
+                except EOFError:
+                    pass
             if dataset is None:
                 dataset=data
             else:
