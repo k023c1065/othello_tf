@@ -38,6 +38,7 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
     while (isGDrive or i == 0) and (time_limit < 0 or time.time()-s_t <= time_limit):
         if isModel:
             model, fn = network.raw_load_model(get_filename=True)
+            print("Target model:",fn)
             if last_fn is None or fn != last_fn:
                 last_fn = fn
                 SMSearch[0] = simple_model_search(model,search_rate=0.75)
