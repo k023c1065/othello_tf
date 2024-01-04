@@ -485,8 +485,8 @@ class test_play():
 
     def loop_game(self):
         win_count = [0, 0]
-
-        for _ in tqdm(range(self.game_count)):
+        tqdm_obj=tqdm(range(self.game_count))
+        for _ in tqdm_obj:
             if self.shuffle:
                 self.turn_append = random.randint(0, 1)
             #print(f"Target model Player No.:{self.turn_append+1}")
@@ -498,6 +498,10 @@ class test_play():
                 end_flg = 0
                 print()
                 while not (cond.isEnd() or end_flg >= 2):
+                    tqdm_obj.set_description(
+                        f"{64-(cond.board[0]+cond.board[1]).sum()}-{round(win_count[0]*100/max(0.01,sum(win_count)),2)}%"+
+                        (11-len(f"{64-(cond.board[0]+cond.board[1]).sum()}-{round(win_count[0]*100/max(0.01,sum(win_count)),2)}%"))*" "
+                    )
                     #print("\rGame count:", _+1, "space left:", 64 -
                     #      (cond.board[0]+cond.board[1]).sum(), end="        ")
                     poss = []
@@ -507,7 +511,7 @@ class test_play():
                     if len(poss) > 0:
                         end_flg = 0
                         next_move, ab_s = self.get_next_move(
-                            cond, poss, ab_s, self.players[cond.turn])
+                            cond, poss, ab_s, self.players[(cond.turn+self.turn_append)%2])
                         if self.isDebug:
                             print("move:", next_move)
                         cond.move(next_move[0], next_move[1])
@@ -522,8 +526,8 @@ class test_play():
             score = list(cond.get_score())
             win_side = np.argmax(score)
             win_count[(win_side+self.turn_append) % 2] += 1
-            if win_side == 1:
-                print("ab_s:", ab_s)
+            # if win_side == 1:
+            #     print("ab_s:", ab_s)
             #print("win_count:", win_count)
 
         return win_count
@@ -568,15 +572,15 @@ if __name__ == "__main__":
     f = fs[0]
     import network
     GAME_COUNT=1000
-    USE_MCTS=True
+    USE_MCTS=True  
     target_model = network.miniResNet((8, 8, 2), 64)
     target_model(np.empty((1, 8, 8, 2)))
-    target_model.load_weights(f)
-    print(f)
+    target_model.load_weights(fs[1])
+    print(fs[1])
     baseline_model = fs[1]
     if len(fs) > 1:
-        baseline_model = network.raw_load_model(fs[-2])
-        print(fs[-2])
+        baseline_model = network.raw_load_model(fs[0])
+        print(fs[0])
     
     tp = test_play(players=["Model", "Model"], model=[
                    target_model, baseline_model], game_count=GAME_COUNT//2, Doshuffle=False, useMCTS=USE_MCTS)

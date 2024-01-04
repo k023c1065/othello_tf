@@ -10,6 +10,7 @@ import tqdm as tq
 from datetime import datetime
 import sys
 import random
+
 moduleList = sys.modules
 ENV_COLAB = False
 if 'google.colab' in moduleList:
@@ -269,7 +270,8 @@ class miniResNet(tf.keras.Model):
 
 
 class train_module():
-    def __init__(self, model, loss_object, optimizer, input_shape=(8, 8, 2)):
+    def __init__(self, model, loss_object, optimizer, input_shape=(8, 8, 2),
+                 tester=None,test_round=5,test_against="Random",test_game_count=500):
         if isinstance(model, str):
             self.model = ResNet(input_shape)
             self.model.load_weights(model)
@@ -283,6 +285,12 @@ class train_module():
         self.test_loss = [[], []]
         self.test_loss_unc = []
         self.plt_file_name = "loss_graph.png"
+        
+        # Testing params
+        self.tester=tester
+        self.test_round=test_round
+        self.test_against=test_against
+        self.game_count=test_game_count
 
     @tf.function
     def train_step(self, images, labels):
@@ -313,7 +321,7 @@ class train_module():
         print("last train:", self.last_train)
         skip_rate_cap = 1//skip_rate
         best_test_loss = 3.9  # Probably the baseline
-
+        best_model = None
         for e in range(EPOCH):
             self.last_train = datetime.now()
             print("EPOCH:", e)
@@ -357,11 +365,29 @@ class train_module():
                 print()
             self.save_fig()
             self.save_model()
-            if self.test_loss[1][-1] < best_test_loss:
+            if (self.test_loss[1][-1] < best_test_loss):
                 best_test_loss=self.test_loss[1][-1]
-                self.save_best_model()
+                best_model=tf.keras.models.clone_model(self.model)
+                #self.save_best_model()
+            if self.tester is not None:
+                if e+1%self.test_round==0:
+                    if self.test(best_model):
+                        self.save_best_model(arg_model=best_model)
+                        print("Created ideal model,Exiting...")
+                        break
             self.save_train()
-
+    def test(self,model):
+        using_model=[model,None]
+        if self.test_against == "Model":
+            baseline_model=raw_load_model("baseline.h5")
+            using_model[1]=baseline_model
+        players=["Model",self.test_against]
+        test_module=self.tester(players=players,model=using_model,game_count=self.game_count,DoShuffle=True)
+        result=test_module.loop_game()
+        if result[0]/(result[0]+result[1])>=0.55:
+            return True
+        else:
+            return False
     def save_fig(self):
         train_loss = get_moving_ave(self.train_loss)
         plt.plot([i for i in range(len(self.train_loss))],
@@ -379,11 +405,15 @@ class train_module():
             self.model.save_weights("./drive/MyDrive/model/"+model_file_name)
         print("model saved as ", model_file_name)
 
-    def save_best_model(self, model_path="./model/"):
+    def save_best_model(self, model_path="./model/",arg_model = None):
         model_file_name = "best_model.h5"
-        self.model.save_weights(model_path+model_file_name)
+        if arg_model is None:
+            model=self.model
+        else:
+            model=arg_model
+        model.save_weights(model_path+model_file_name)
         if ENV_COLAB:
-            self.model.save_weights("./drive/MyDrive/model/"+model_file_name)
+            model.save_weights("./drive/MyDrive/model/"+model_file_name)
         print("Best model has been updated")
 
     def save_train(self, path="./model/"):
