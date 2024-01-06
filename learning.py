@@ -1,13 +1,23 @@
-from dataset import dataset2tensor, load_train_test_data
+from dataset import dataset2tensor, load_train_test_data, split_array
 from network import *
 import tensorflow as tf
 
 
 def main(EPOCH=10, batch_size=16, input_shape=(8, 8, 2), t_module=None):
-    train,test=load_train_test_data()
+    train,test = load_train_test_data()
+    
+    # Spliting datasets to avoid memory overload
+    max_dataset_size=512*512
+    if len(train)>max_dataset_size:
+        num=len(train)//max_dataset_size+1
+        train=split_array(train,num)[0]
+        test=split_array(test,num)
+
     train_ds = dataset2tensor(train,batch_size,True)
-    test_ds = dataset2tensor(test, 512,False)
-    del train,test
+    del train
+    test_ds = dataset2tensor(test, 1024,False)
+    del test
+
     if t_module is None:
         model = miniResNet(input_shape, 64)
         print(np.empty(input_shape)[np.newaxis].shape)

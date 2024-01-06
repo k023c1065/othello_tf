@@ -384,6 +384,7 @@ class train_module():
         players=["Model",self.test_against]
         test_module=self.tester(players=players,model=using_model,game_count=self.game_count,DoShuffle=True)
         result=test_module.loop_game()
+        print("Test play result:",result)
         if result[0]/(result[0]+result[1])>=0.55:
             return True
         else:

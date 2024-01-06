@@ -17,3 +17,4 @@ gcloud
 setting2.yaml
 gcloud.pub
 search/__pycache__/mcts.cpython-39.pyc
+credentials.json

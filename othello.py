@@ -420,18 +420,23 @@ class minimax_search():
 class simple_model_search():
     def __init__(self, model, search_rate=1):
         self.model = model
+        self.cache=dict()
         self.model_cache = dict()
         self.search_rate=search_rate
     def search(self, cond):
         moves = []
-        if cond.hash() in self.model_cache:
-            return self.model_cache[cond.hash()]
+        cond_hash=cond.hash()
+        if cond_hash in self.cache and self.search_rate>10:
+            return self.cache[cond_hash]
         for i in range(8):
             for j in range(8):
                 if cond.is_movable(i, j):
                     moves.append([i, j])
-        r = np.array(self.model(np.transpose(cond.board, [1, 2, 0])[np.newaxis]))[
-            0].reshape((8, 8))
+        if not cond_hash in self.model_cache:
+            r = np.array(self.model(np.transpose(cond.board, [1, 2, 0])[np.newaxis]))[
+                0].reshape((8, 8))
+            self.model_cache[cond_hash]=r
+        r = self.model_cache[cond_hash]
         s = -1e9
         best_move = [-1, -1]
         if len(moves)>0:
@@ -440,7 +445,7 @@ class simple_model_search():
                     if r[m[0]][m[1]] > s:
                         best_move = m
                         s = r[m[0]][m[1]]
-                self.model_cache[cond.hash()] = best_move
+                self.cache[cond_hash] = best_move
             else:
                 weights=[]
                 for m in moves:
@@ -500,7 +505,7 @@ class test_play():
                 while not (cond.isEnd() or end_flg >= 2):
                     tqdm_obj.set_description(
                         f"{64-(cond.board[0]+cond.board[1]).sum()}-{round(win_count[0]*100/max(0.01,sum(win_count)),2)}%"+
-                        (11-len(f"{64-(cond.board[0]+cond.board[1]).sum()}-{round(win_count[0]*100/max(0.01,sum(win_count)),2)}%"))*" "
+                        (11-len(f"{64-(cond.board[0]+cond.board[1]).sum()}-{round(win_count[0]*100/(0.000001+sum(win_count)),2)}%"))*" "
                     )
                     #print("\rGame count:", _+1, "space left:", 64 -
                     #      (cond.board[0]+cond.board[1]).sum(), end="        ")
@@ -571,16 +576,16 @@ if __name__ == "__main__":
     print(fs)
     f = fs[0]
     import network
-    GAME_COUNT=1000
-    USE_MCTS=True  
+    GAME_COUNT=50
+    USE_MCTS=False 
     target_model = network.miniResNet((8, 8, 2), 64)
     target_model(np.empty((1, 8, 8, 2)))
     target_model.load_weights(fs[1])
-    print(fs[1])
+    print("target_model:",fs[1])
     baseline_model = fs[1]
     if len(fs) > 1:
         baseline_model = network.raw_load_model(fs[0])
-        print(fs[0])
+        print("baseline_model:",fs[0])
     
     tp = test_play(players=["Model", "Model"], model=[
                    target_model, baseline_model], game_count=GAME_COUNT//2, Doshuffle=False, useMCTS=USE_MCTS)
@@ -588,6 +593,7 @@ if __name__ == "__main__":
     tp = test_play(players=["Model", "Model"], model=[
                    baseline_model, target_model], game_count=GAME_COUNT//2, Doshuffle=False, useMCTS=USE_MCTS)
     score2 = tp.loop_game()
+    print("score:",score,"score2:",score2)
     score2[0], score2[1] = score2[1], score2[0]
     score = np.array(score)+np.array(score2)
     print()

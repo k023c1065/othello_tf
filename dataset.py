@@ -117,6 +117,7 @@ def loadDataset():
     if len(dataset_files)<1:
         raise FileNotFoundError("Files that matched the pattern seems to be none.\n",
                                 "Please check dataset folder.")
+    random.shuffle(dataset_files)
     for file in dataset_files:
         try:
             with open(file,"rb") as f:
@@ -137,6 +138,7 @@ def loadDataset():
                                 f"dataset_files:{dataset_files}")
     print("Done")
     return dataset
+
 def dataset2tensor(dataset,batch_size,do_shuffle):
     x,y=dataset[0],dataset[1]
     x=np.array(x,dtype="float32")
