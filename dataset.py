@@ -163,7 +163,7 @@ def split_array(ary,num):
     array_len=len(ary)//num
     for i in range(num):
         result.append(ary[i*array_len:(i+1)*array_len])
-    result[-1]+=ary[(i+1)*array_len:]
+    result[-1]+=[ary[(i+1)*array_len:]]
     return result
 
 
