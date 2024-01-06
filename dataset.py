@@ -158,18 +158,15 @@ def dataset2tensor(dataset,batch_size,do_shuffle):
             ).batch(batch_size)
     return ds
 
-def split_array(ary:list|np.ndarray,num):
+def split_array(ary,num):
     result=[]
     array_len=len(ary)//num
     is_ndarray = type(ary) == np.ndarray
     if is_ndarray:
-        dtype=ary.dtype
-    ary=list(ary)
+        return np.array_split(ary,num)
     for i in range(num):
         result.append(ary[i*array_len:(i+1)*array_len])
     result[-1]+=ary[(i+1)*array_len:]
-    if is_ndarray:
-        result = np.array(result,dtype=dtype)
     return result
 
 
