@@ -11,8 +11,8 @@ def main(EPOCH=10, batch_size=16, input_shape=(8, 8, 2), t_module=None):
     print
     if len(train[0])>max_dataset_size:
         num=len(train[0])//max_dataset_size+1
-        train=split_array(train,num)[0]
-        test=split_array(test,num)
+        train=[split_array(train[0],num)[0],split_array(train[1],num)[0]]
+        test=[split_array(test[0],num)[0],split_array(test[1],num)[0]]
 
     train_ds = dataset2tensor(train,batch_size,True)
     del train
