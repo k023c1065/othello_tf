@@ -151,7 +151,7 @@ def dataset2tensor(dataset,batch_size,do_shuffle):
     if do_shuffle:
         ds=tf.data.Dataset.from_tensor_slices(
             (x, y)
-            ).shuffle(100000,reshuffle_each_iteration=True,seed=random.randint(0,2**32)).batch(batch_size)
+            ).shuffle(25000,reshuffle_each_iteration=True,seed=random.randint(0,2**32)).batch(batch_size)
     else:
         ds = tf.data.Dataset.from_tensor_slices(
                 (x,y)
