@@ -167,7 +167,7 @@ def split_array(ary:list|np.ndarray,num):
     ary=list(ary)
     for i in range(num):
         result.append(ary[i*array_len:(i+1)*array_len])
-    result[-1]+=[ary[(i+1)*array_len:]]
+    result[-1]+=ary[(i+1)*array_len:]
     if is_ndarray:
         result = np.array(result,dtype=dtype)
     return result
