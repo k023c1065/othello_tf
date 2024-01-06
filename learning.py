@@ -8,7 +8,7 @@ def main(EPOCH=10, batch_size=16, input_shape=(8, 8, 2), t_module=None):
     
     # Spliting datasets to avoid memory overload
     max_dataset_size=512*512
-    print
+    print("train len:",len(train[0]))
     if len(train[0])>max_dataset_size:
         num=len(train[0])//max_dataset_size+1
         train=[split_array(train[0],num)[0],split_array(train[1],num)[0]]
