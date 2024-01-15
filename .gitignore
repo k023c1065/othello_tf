@@ -1,5 +1,5 @@
 /.history/*
-/__pycache__/*
+*/__pycache__/*
 /.history/
 /__pycache__/
 /dataset/*
@@ -18,3 +18,8 @@ setting2.yaml
 gcloud.pub
 search/__pycache__/mcts.cpython-39.pyc
 credentials.json
+.venv/*
+game/search/__pycache__/mcts.cpython-39.pyc
+network/model/baseline.h5
+network/model/baseline2.h5
+.gitignore

@@ -1,5 +1,5 @@
 from dataset import dataset2tensor, load_train_test_data, split_array
-from network import *
+from network.network import *
 import tensorflow as tf
 
 
@@ -11,8 +11,9 @@ def main(EPOCH=10, batch_size=16, input_shape=(8, 8, 2), t_module=None):
     print("train len:",len(train[0]))
     if len(train[0])>max_dataset_size:
         num=len(train[0])//max_dataset_size+1
-        train=[split_array(train[0],num)[0],split_array(train[1],num)[0]]
-        test=[split_array(test[0],num)[0],split_array(test[1],num)[0]]
+        elem = random.randint(0,num-1)
+        train=[split_array(train[0],num)[elem],split_array(train[1],num)[elem]]
+        test=[split_array(test[0],num)[elem],split_array(test[1],num)[elem]]
 
     train_ds = dataset2tensor(train,batch_size,True)
     del train
@@ -21,7 +22,6 @@ def main(EPOCH=10, batch_size=16, input_shape=(8, 8, 2), t_module=None):
 
     if t_module is None:
         model = miniResNet(input_shape, 64)
-        print(np.empty(input_shape)[np.newaxis].shape)
         model.build(np.empty(input_shape)[np.newaxis].shape)
         mfs = glob.glob("./model/*.h5")
         if len(mfs) > 0:

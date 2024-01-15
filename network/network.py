@@ -26,7 +26,7 @@ def raw_load_model(file_name=None, get_filename=False):
     model = miniResNet((8, 8, 2), 64)
     model(np.empty((1, 8, 8, 2)))
     try:
-        model_files = glob.glob("./model/*")
+        model_files = glob.glob("./network/model/*")
         model_file = max(model_files, key=os.path.getctime)
         if type(file_name) is str:
             model_file = file_name
@@ -442,3 +442,8 @@ def get_moving_ave(data, b=100, result=None):
             temp.pop(0)
         result.append(np.mean(temp))
     return result
+
+
+if __name__ == "__main__":
+    model=miniResNet((8,8,2),64)
+    print(model(np.empty((1,8,8,2))))

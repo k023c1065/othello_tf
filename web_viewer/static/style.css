@@ -1,0 +1,67 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    margin: 0;
+    background-color: #008000;
+  }
+  
+  .stage {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 60px;
+    width: 404px;
+    height: 404px;
+  }
+  
+  .square {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border: solid black;
+    border-width: 0 4px 4px 0;
+    cursor: pointer;;
+  }
+  
+  .square:nth-child(-n + 8) {
+    border-width: 4px 4px 4px 0;
+    height: 54px;
+  }
+  
+  .square:nth-child(8n + 1) {
+    border-width: 0 4px 4px 4px;
+    width: 54px;
+  }
+  
+  .square:first-child {
+    border-width: 4px;
+    width: 54px;
+    height: 54px;
+  }
+  
+  .stone {
+    position: absolute;
+    top: 2px;
+    bottom: 0;
+    left: 2px;
+    width: 42px;
+    height: 42px;
+    border-radius: 21px;
+  }
+  
+  .stone[data-state="0"] {
+    display: none;
+  }
+  
+  .stone[data-state="1"] {
+    background-color: black;
+  }
+  
+  .stone[data-state="2"] {
+    background-color: white;
+  }
+  
+  #square-template {
+    display: none;
+  } 

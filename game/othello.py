@@ -8,7 +8,7 @@ import numpy as np
 from collections import deque
 import sys
 
-from network import raw_load_model
+from network.network import raw_load_model
 sys.setrecursionlimit(10**6)
 
 
@@ -68,7 +68,17 @@ class game_cond:
         hash = flatten_board*base_2
         hash = np.base_repr(hash.sum(), 36)+str(self.turn)
         return hash
-
+    def update_placable(self):
+        place_able=set()
+        for i in range(8):
+            for j in range(8):
+                for d in const_direction:
+                    b=self.safeboard(i+d[0],j+d[1])
+                    if (b[0]==1 or b[1]==1) and ((not self.safeboard(i,j)[0]) and (not self.safeboard(i,j)[1])):
+                        place_able.add((i,j))
+                        break
+        print("temp placable:",place_able)
+        self.placable=place_able
     def is_movable(self, i, j):
         if not (i, j) in self.placable:
             return False
@@ -210,12 +220,11 @@ class game_cond:
 
     def OpponentAround(self, i, j, turn):
         return self.board[turn][max(0, i-1):min(8, i+2), max(0, j-1):min(8, j+2)]
-
     def safeboard(self, i, j):
         if self.isLegal(i, j):
-            return self.board
+            return [self.board[0][i][j],self.board[1][i][j]]
         else:
-            return ALLWAYSFALSE()
+            return [ALLWAYSFALSE(),ALLWAYSFALSE()]
 
     def isEnd(self):
         return len(self.placable) < 1 or self.board[0].sum() < 1 or self.board[1].sum() < 1 or self.notChangedCount >= 2
@@ -245,215 +254,6 @@ class game_cond:
         print()
 
 
-if __name__ == "__main__":
-    pass
-
-
-class MCTS():
-    def __init__(self, cond: game_cond, model, search_rate=1):
-        self.model = model
-        self.uct_c = 2**0.5
-        self.qc_limit = 100
-        self.roll_out_limit = 100
-        self.time_limit = 15
-        self.q_board_dict = {}
-        self.search_rate = 1
-
-    def change_search_rate(self, rate):
-        self.search_rate = rate
-
-    def get_next_move(self, cond):
-        qc_score = []
-        self.play_count = {}
-        self.qdict = {}
-        self.move_poss_dict = {}
-        self.init_cond = game_cond(cond)
-        grand_parent_key = self.init_cond.hash()  # Am I going to use this?
-        # Defines parent leaf
-        key = 0
-        n_moves = []
-        counter = 0
-        s_t = time.time()
-        long_flg = True
-        while len(qc_score) < self.qc_limit and counter < self.roll_out_limit and time.time()-s_t < self.time_limit:
-            counter += 1
-            # Moves to parent leaf
-            cond = game_cond(self.init_cond)
-            for move in n_moves:
-                cond.move(move[0], move[1])
-                cond.flip_board()
-            # Expand
-            poss = []
-            for p in cond.placable:
-                if cond.is_movable(p[0], p[1]):
-                    poss.append(p)
-            self.move_poss_dict[key] = poss
-            target_key = key
-            while target_key > 0:
-                self.play_count[target_key] += len(poss)
-                target_key //= 64
-            for p in poss:
-                k = key*64+self.sub_key(p)
-                self.play_count[k] = 1
-
-            # Evaluate Q score for current leaf
-            if cond.hash() in self.q_board_dict:
-                r = self.q_board_dict[cond.hash()]
-            else:
-                r = np.array(self.model(np.transpose(cond.board[np.newaxis], [
-                             0, 2, 3, 1]), training=False)[0]).reshape(8, 8)
-                self.q_board_dict[cond.hash()] = r
-            for p in poss:
-                q = r[p[0]][p[1]]
-                self.qdict[key*64+self.sub_key(p)] = q
-                qc_score.append([q, key*64+self.sub_key(p)])
-
-            # Evaluate Q score for other leafs
-            for qc in qc_score:
-                if qc[0] == 0:
-                    qc[0] = self.qdict[qc[1]]
-
-            # Evaluate C score
-            for qc in qc_score:
-                N = self.play_count[qc[1]]
-                N_sum = 0
-                parent_key = qc[1]//64
-                try:
-                    # print("parent moves:",self.get_moves(parent_key))
-                    for move in self.move_poss_dict[parent_key]:
-
-                        N_sum += self.play_count[parent_key *
-                                                 64+self.sub_key(move)]
-                except KeyError:
-                    print(qc[1])
-                    print(parent_key)
-                    raise KeyError()
-                c_score = self.uct_c*np.sqrt(np.log(N_sum)/N)
-                qc[0] += c_score
-            # Finds best qc score leaf and set it as new parent leaf
-            qc_score.sort()
-            if len(qc_score) == 0:
-                break
-            n_moves = self.get_moves(qc_score[-1][1])
-            key = int(qc_score[-1][1])
-            qc_score.pop()
-            for qc in qc_score:
-                qc[0] = 0
-        r = [None, 0]
-        poss = []
-        poss = self.move_poss_dict[0]
-        poss_qc = []
-        for p in poss:
-            key = self.sub_key(p)
-            poss_qc.append(self.play_count[key]**(1/self.search_rate))
-        r = random.choices(poss, weights=poss_qc, k=1)[0]
-        return [r, 0]
-
-    def get_key(self, moves: list):
-        key = 0
-        for move in enumerate(moves):
-            key *= 64
-            key += self.sub_key(move)
-        return key
-
-    def sub_key(self, move):
-        return move[0]+8*move[1]
-
-    def get_moves(self, key):
-        moves = []
-        init_key = key
-        while key > 0:
-            moves.append(key % 8)
-            key //= 8
-
-        if len(moves) > 0:
-            if len(moves) % 2 == 1:
-                moves.append(0)
-            moves = np.array(moves).reshape(len(moves)//2, 2)
-            moves = list(moves)
-            moves.reverse()
-        return moves
-
-
-class minimax_search():
-    def __init__(self):
-        self.cache = {}
-    # From https://zero2one.jp/learningblog/mini-max-alpha-beta/
-    # Thank You!
-
-    def get_move(self, board: game_cond):
-        if board.hash() in self.cache:
-            return self.cache[board.hash()]
-        if board.isEnd():
-            return board.get_score_float(), None
-        best_score = 10
-        best_move = []
-        # 全ての可能な手について評価関数を計算
-        poss = []
-        for p in board.placable:
-            if board.is_movable(p[0], p[1]):
-                poss.append(p)
-        # 　打つ手がない場合のみ手番をスキップすることができる
-        if len(poss) == 0:
-            b = game_cond(board)
-            b.flip_board()
-            score, _ = self.get_move(b)
-            score = 1-score
-            if score < best_score:
-                best_score = score
-                best_move = [-1, -1]
-        else:
-            for move in poss:
-                b = game_cond(board)
-                b.move(move[0], move[1])
-                b.flip_board()
-                # 　スコアは必ず[0,1]となるので1-scoreとすることで相手のスコアを取得することができる
-                score, _ = self.get_move(b)
-                score = 1-score
-                if score < best_score:
-                    best_score = score
-                    best_move = move
-        self.cache[board.hash()] = (best_score, best_move)
-        return best_score, best_move
-
-
-class simple_model_search():
-    def __init__(self, model, search_rate=1):
-        self.model = model
-        self.cache=dict()
-        self.model_cache = dict()
-        self.search_rate=search_rate
-    def search(self, cond):
-        moves = []
-        cond_hash=cond.hash()
-        if cond_hash in self.cache and self.search_rate>10:
-            return self.cache[cond_hash]
-        for i in range(8):
-            for j in range(8):
-                if cond.is_movable(i, j):
-                    moves.append([i, j])
-        if not cond_hash in self.model_cache:
-            r = np.array(self.model(np.transpose(cond.board, [1, 2, 0])[np.newaxis]))[
-                0].reshape((8, 8))
-            self.model_cache[cond_hash]=r
-        r = self.model_cache[cond_hash]
-        s = -1e9
-        best_move = [-1, -1]
-        if len(moves)>0:
-            if self.search_rate>10:
-                for m in moves:
-                    if r[m[0]][m[1]] > s:
-                        best_move = m
-                        s = r[m[0]][m[1]]
-                self.cache[cond_hash] = best_move
-            else:
-                weights=[]
-                for m in moves:
-                    weights.append(
-                        r[m[0]][m[1]]**self.search_rate 
-                    )
-                best_move=random.choices(moves,weights=weights,k=1)[0]
-        return best_move
 
 
 class test_play():
@@ -569,13 +369,136 @@ class test_play():
             next_move = axis
         return next_move, ab_s
 
+class single_play_test():
+    def __init__(self,cond:game_cond,algo=None,show=False,delay=-1):
+        self.cond=cond
+        if algo is None:
+            self.isRandom=True
+        else:
+            self.isRandom=False
+        self.algo=algo
+        self.show=show
+        self.delay=-1
+        try:
+            assert (self.show is False or (delay>=0 and self.show))
+        except AssertionError:
+            print(self.show,delay>=0,self.show)
+            raise AssertionError("Error")
+        
+    def start_play(self,algo_args=(),end_num=64):
+        cond=game_cond(self.cond)
+        end_flg = 0
+        while not (cond.isEnd() or end_flg >= 2 or cond.board[0].sum()+cond.board[1].sum()<=end_num):
+            poss = []
+            for p in cond.placable:
+                if cond.is_movable(p[0], p[1]):
+                    poss.append(p)
+            if len(poss) > 0:
+                end_flg = 0
+                if self.isRandom:
+                    next_move=random.choice(poss)
+                else:
+                    next_move=self.algo(*algo_args)
+                if self.show:
+                    print("move:", next_move)
+                cond.move(next_move[0], next_move[1])
+            else:
+                end_flg += 1
+            if self.show:
+                cond.show()
+                time.sleep(self.delay)
+            cond.flip_board()
+        return cond.board[0].sum(),cond.board[1].sum()
 
+
+from .search.mcts import MCTS,randomMCTS
+
+class minimax_search():
+    def __init__(self):
+        self.cache = {}
+    # From https://zero2one.jp/learningblog/mini-max-alpha-beta/
+    # Thank You!
+
+    def get_move(self, board: game_cond):
+        if board.hash() in self.cache:
+            return self.cache[board.hash()]
+        if board.isEnd():
+            return board.get_score_float(), None
+        best_score = 10
+        best_move = []
+        # 全ての可能な手について評価関数を計算
+        poss = []
+        for p in board.placable:
+            if board.is_movable(p[0], p[1]):
+                poss.append(p)
+        # 　打つ手がない場合のみ手番をスキップすることができる
+        if len(poss) == 0:
+            b = game_cond(board)
+            b.flip_board()
+            score, _ = self.get_move(b)
+            score = 1-score
+            if score < best_score:
+                best_score = score
+                best_move = [-1, -1]
+        else:
+            for move in poss:
+                b = game_cond(board)
+                b.move(move[0], move[1])
+                b.flip_board()
+                # 　スコアは必ず[0,1]となるので1-scoreとすることで相手のスコアを取得することができる
+                score, _ = self.get_move(b)
+                score = 1-score
+                if score < best_score:
+                    best_score = score
+                    best_move = move
+        self.cache[board.hash()] = (best_score, best_move)
+        return best_score, best_move
+
+
+class simple_model_search():
+    def __init__(self, model, search_rate=1):
+        self.model = model
+        self.cache=dict()
+        self.model_cache = dict()
+        self.search_rate=search_rate
+    def search(self, cond):
+        moves = []
+        cond_hash=cond.hash()
+        if cond_hash in self.cache and self.search_rate>10:
+            return self.cache[cond_hash]
+        for i in range(8):
+            for j in range(8):
+                if cond.is_movable(i, j):
+                    moves.append([i, j])
+        if not cond_hash in self.model_cache:
+            r = np.array(self.model(np.transpose(cond.board, [1, 2, 0])[np.newaxis]))[
+                0].reshape((8, 8))
+            self.model_cache[cond_hash]=r
+        r = self.model_cache[cond_hash]
+        s = -1e9
+        best_move = [-1, -1]
+        if len(moves)>0:
+            if self.search_rate>10:
+                for m in moves:
+                    if r[m[0]][m[1]] > s:
+                        best_move = m
+                        s = r[m[0]][m[1]]
+                self.cache[cond_hash] = best_move
+            else:
+                weights=[]
+                for m in moves:
+                    weights.append(
+                        r[m[0]][m[1]]**self.search_rate 
+                    )
+                best_move=random.choices(moves,weights=weights,k=1)[0]
+        return best_move
+  
 if __name__ == "__main__":
     fs = glob.glob("model/*")
     fs = sorted(fs, key=os.path.getmtime)
     print(fs)
     f = fs[0]
-    import network
+    import network.network as network
     GAME_COUNT=50
     USE_MCTS=False 
     target_model = network.miniResNet((8, 8, 2), 64)

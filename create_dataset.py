@@ -1,8 +1,8 @@
 import ctypes
-from othello import *
+from game.othello import *
 import random
 from dataset import *
-import network
+import network.network as network
 import pickle
 import time
 from tqdm import tqdm
@@ -37,7 +37,7 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
     SMSearch=[None,None]
     while (isGDrive or i == 0) and (time_limit < 0 or time.time()-s_t <= time_limit):
         if isModel:
-            model, fn = network.raw_load_model(get_filename=True)
+            model, fn = network.network.raw_load_model(get_filename=True)
             print("Target model:",fn)
             if last_fn is None or fn != last_fn:
                 last_fn = fn
@@ -48,7 +48,7 @@ def main(proc_num=None, play_num=8192, expand_rate=1, sub_play_count=1024, isMod
                 # and multiprocessing will be bad in this situation
                 IS_MULTI = False
             if os.path.isfile("./model/baseline.h5"):
-                baseline_model = network.raw_load_model("model/baseline.h5")
+                baseline_model = network.network.raw_load_model("model/baseline.h5")
                 if SMSearch[1] is None:
                     baseline_SMSearch = simple_model_search(baseline_model,search_rate=0.75)
                     SMSearch[1]=baseline_SMSearch
