@@ -1,7 +1,7 @@
 from re import search
 from flask import Flask,render_template,request,make_response
 import numpy as np
-
+import pyngrok
 import random
 from datetime import timedelta
 
@@ -82,4 +82,5 @@ def single2double(board):
                 result[(1+board[i][j])%2][i][j]=1
     return result
 if __name__ == "__main__":
+    public_url = pyngrok.ngrok.connect(5000)
     app.run("localhost",port="25565")
