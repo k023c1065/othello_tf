@@ -128,8 +128,8 @@ class MCTS():
             c_score_sample=[]
             for key,qc in qc_score.items():
                 N = self.play_count[key]
-                if not key in self.parent_set:
-                    print("key:",key,"play_count",N)
+                # if not key in self.parent_set:
+                #     print("key:",key,"play_count",N)
                 N_sum = 0
                 parent_key = key//64
                 for move in self.move_poss_dict[parent_key]:
@@ -147,10 +147,10 @@ class MCTS():
                 #       "  c_score:",c_score)
                 gpc.add(pk)
                 qc_score[key] *= c_score
-            print("c_score max:",max(c_score_sample))
-            print("c_score min:",min(c_score_sample))
-            print("q_score max:",max(list(self.qdict.values())))
-            print("q_score min:",min(list(self.qdict.values())))
+            #print("c_score max:",max(c_score_sample))
+            #print("c_score min:",min(c_score_sample))
+            #print("q_score max:",max(list(self.qdict.values())))
+            #print("q_score min:",min(list(self.qdict.values())))
             #print("gpc:",gpc)
             #print("Done")
             # Finds best qc score leaf and set it as new parent leaf
