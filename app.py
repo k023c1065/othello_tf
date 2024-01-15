@@ -82,5 +82,6 @@ def single2double(board):
                 result[(1+board[i][j])%2][i][j]=1
     return result
 if __name__ == "__main__":
-    public_url = ngrok.connect(5000)
+    public_url = ngrok.connect(25565)
+    print(public_url)
     app.run("localhost",port="25565")
